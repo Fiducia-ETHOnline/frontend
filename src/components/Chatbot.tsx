@@ -45,7 +45,6 @@ const Chatbot: React.FC = () => {
 
     return (
         <div className="chatbot-container">
-
             <div className="message-input-area">
                 <input
                     type="text"
@@ -60,6 +59,10 @@ const Chatbot: React.FC = () => {
                 <button onClick={sendMessage} disabled={loading}>
                     {loading ? <AiOutlineLoading3Quarters /> : <FaArrowUp />}
                 </button>
+            </div>
+            <div className="introduction-area">
+                <p>Fiducia is a Web3 based AI Agent. </p>
+                <p></p>
             </div>
             {error && <p className="chatbot-error">{error}</p>}
         </div>

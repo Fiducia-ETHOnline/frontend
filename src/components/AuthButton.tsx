@@ -83,14 +83,14 @@ const AuthButton: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <ConnectKitButton />
             {isConnected && !authInfo && (
-                <button onClick={handleLogin} disabled={loading}>
+                <button onClick={handleLogin} disabled={loading} className="auth-button">
                     {loading ? 'Logging in...' : 'Sign In with Wallet'}
                 </button>
             )}
             {authInfo && (
                 <>
                     <span>{authInfo.address.substring(0, 6)}... ({authInfo.role})</span>
-                    <button onClick={handleLogout}>Logout</button>
+                    <button className="auth-button" onClick={handleLogout}>Logout</button>
                 </>
             )}
             {error && <p style={{ color: 'red' }}>{error}</p>}

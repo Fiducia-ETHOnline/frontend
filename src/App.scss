@@ -19,8 +19,6 @@ $accent-color: #0d6efd;
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    border-bottom: 1px solid $border-color;
-    background-color: $secondary-bg;
 
     .logo h1 {
         margin: 0;
@@ -34,7 +32,7 @@ $accent-color: #0d6efd;
     align-items: center;
     gap: 12px;
 
-    button {
+    .auth-button {
         background-color: transparent;
         border: 1px solid $border-color;
         color: $text-color;
@@ -86,6 +84,7 @@ $accent-color: #0d6efd;
         padding: 6px;
         background-color: $secondary-bg;
         height: 5rem;
+        box-shadow: 0 8px 10px rgba(0, 0, 0, 0.1);
 
         input {
             align-self: flex-start;
@@ -128,6 +127,11 @@ $accent-color: #0d6efd;
     .chatbot-error {
         color: #dc3545;
         margin-top: 1rem;
+    }
+
+    .introduction-area {
+        margin-top: 5rem;
+
     }
 }
 
