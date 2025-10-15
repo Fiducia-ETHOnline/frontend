@@ -31,9 +31,9 @@ type Web3ProviderProps = {
 };
 
 export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
-    useEffect(() => {
-        console.log(alchemyApiKey, walletConnectProjectId);
-    }, []);
+    // useEffect(() => {
+    //     console.log(alchemyApiKey, walletConnectProjectId);
+    // }, []);
     return (
         <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
