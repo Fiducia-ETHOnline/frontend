@@ -1,29 +1,16 @@
-import './App.scss';
-import AuthButton from './components/AuthButton.tsx';
-import Chatbot from './components/Chatbot.tsx';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import Dashboard from './pages/Dashboard';
+import './App.css';
 
 function App() {
     return (
-        <div className="app-layout">
-            <header className="header">
-                <div className="logo">
-                    <h1>Fiducia</h1>
-                </div>
-                <div className="auth-area">
-                    <AuthButton />
-                </div>
-            </header>
-
-            <main className="main-content">
-                <Chatbot />
-            </main>
-
-            <footer className="footer">
-                <p>
-                    &copy; 2025 Fiducia. All rights reserved.
-                </p>
-            </footer>
-        </div>
+        <Router>
+            <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+            </Routes>
+        </Router>
     );
 }
 
