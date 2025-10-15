@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { mainnet, sepolia } from 'wagmi/chains';
+import { mainnet } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
 
@@ -9,10 +9,9 @@ const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
 
 const config = createConfig(
     getDefaultConfig({
-        chains: [mainnet, sepolia],
+        chains: [mainnet],
         transports: {
             [mainnet.id]: http(`https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`),
-            [sepolia.id]: http(`https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`),
         },
 
         walletConnectProjectId,
@@ -20,8 +19,8 @@ const config = createConfig(
         appName: 'Fiducia',
 
         appDescription: 'A decentralized protocol for AI agent communication.',
-        appUrl: 'https://fiducia.app',
-        appIcon: 'https://fiducia.app/logo.png',
+        appUrl: 'https://fiduciademo.netlify.app/',
+        appIcon: '',
     }),
 );
 

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://fiducia.zeabur.app/api';
 
 interface UseAutoResizeTextareaProps {
     minHeight: number;
