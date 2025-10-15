@@ -2,6 +2,7 @@ import Beams from "../components/Beams";
 import { motion } from "framer-motion";
 import { Circle } from "lucide-react";
 import { cn } from "../lib/utils";
+import {useNavigate} from "react-router-dom";
 
 function LandingPage() {
   const fadeUpVariants = {
@@ -16,6 +17,8 @@ function LandingPage() {
       },
     }),
   };
+
+  const navigate = useNavigate();
 
   return (
     <div
@@ -59,7 +62,7 @@ function LandingPage() {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.5] mb-8 md:mb-12"
           >
             <Circle className="h-2 w-2 fill-rose-500/80" />
-            <span className="text-sm text-white/80 tracking-wide">Fiducia</span>
+            <span className="text-sm text-white/80 tracking-wide" onClick={() => navigate('/dashboard')}>Fiducia</span>
           </motion.div>
 
           <motion.div
@@ -92,8 +95,7 @@ function LandingPage() {
             animate="visible"
           >
             <p className="text-base sm:text-lg md:text-xl text-white/80 mb-8 leading-relaxed font-light tracking-wide max-w-xl mx-auto px-4">
-              Secure daily AI-to-Ai communication & payments under Web3 for
-              Fiducia Agents.
+              Secure daily AI-to-AI communication & payments under Web3 for Fiducia Agents.
             </p>
           </motion.div>
         </div>
