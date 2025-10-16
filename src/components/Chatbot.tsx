@@ -106,7 +106,8 @@ function TypingDots() {
 }
 
 const Chatbot: React.FC = () => {
-  const { role } = useAuthStore();
+  // @ts-ignore
+    const { role } = useAuthStore();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
