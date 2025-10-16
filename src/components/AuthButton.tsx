@@ -5,7 +5,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Shield, Loader2 } from "lucide-react";
 
-const API_BASE_URL = "https://fiducia.zeabur.app/api";
+const API_BASE_URL = "http://fiduciademo.123a.club/api";
 
 interface AuthInfo {
   token: string;

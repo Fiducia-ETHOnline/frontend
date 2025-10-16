@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_BASE_URL = 'https://fiducia.zeabur.app/api';
+const API_BASE_URL = 'http://fiduciademo.123a.club/api';
 
 interface UseAutoResizeTextareaProps {
     minHeight: number;
@@ -238,7 +238,14 @@ const Chatbot: React.FC = () => {
 
             const response = await axios.post(
                 `${API_BASE_URL}/chat/messages`,
-                { text: input },
+                {
+                    messages: [
+                        {
+                            role: "user",
+                            content: input
+                        }
+                    ]
+                },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
