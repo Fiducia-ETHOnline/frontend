@@ -266,14 +266,13 @@ const Chatbot: React.FC = () => {
       const response = await axios.post(
         `${API_BASE_URL}/chat/messages`,
         {
-          role: role || "customer",
           messages: [
             ...messages.map((msg) => ({
-              role: role || "customer",
+              role: msg.role,
               content: msg.content,
             })),
             {
-              role: role || "customer",
+              role: "user",
               content: userMessage,
             },
           ],
