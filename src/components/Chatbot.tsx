@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_BASE_URL = 'http://fiduciademo.123a.club/api';
+const API_BASE_URL = 'https://fiduciademo.123a.club/api';
 
 interface UseAutoResizeTextareaProps {
     minHeight: number;
