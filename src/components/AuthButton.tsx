@@ -4,19 +4,14 @@ import { useAccount, useSignMessage } from "wagmi";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Shield, Loader2 } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
-
-interface AuthInfo {
-  token: string;
-  address: string;
-  role: "customer" | "merchant" | null;
-}
 
 const AuthButton: React.FC = () => {
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
-  const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
+  const { token, role, setAuth, clearAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
@@ -31,22 +26,18 @@ const AuthButton: React.FC = () => {
 
       if (storedToken && address) {
         try {
-          setAuthInfo({
-            token: storedToken,
-            address,
-            role: storedRole,
-          });
+          setAuth(storedToken, address, storedRole);
           console.log("Session restored for:", address);
         } catch (err) {
           console.error("Session validation failed", err);
           localStorage.removeItem("fiducia_jwt");
           localStorage.removeItem("fiducia_role");
-          setAuthInfo(null);
+          clearAuth();
         }
       }
     };
     checkSession();
-  }, [address]);
+  }, [address, setAuth, clearAuth]);
 
   const extractNonce = (message: string): string => {
     // Extract nonce from message format: "Sign this message to log in to Fiducia. Domain:a2a.com Nonce: f3139d1717365ae8"
@@ -106,11 +97,11 @@ const AuthButton: React.FC = () => {
 
       // Step 5: Check if role needs to be set
       if (!user.role) {
-        setAuthInfo({ token, address: user.address, role: null });
+        setAuth(token, user.address, null);
         localStorage.setItem("fiducia_jwt", token);
         setShowRoleSelector(true);
       } else {
-        setAuthInfo({ token, address: user.address, role: user.role });
+        setAuth(token, user.address, user.role);
         localStorage.setItem("fiducia_jwt", token);
         localStorage.setItem("fiducia_role", user.role);
         console.log("Login successful!", user);
@@ -130,30 +121,30 @@ const AuthButton: React.FC = () => {
       setError(errorMsg);
       localStorage.removeItem("fiducia_jwt");
       localStorage.removeItem("fiducia_role");
-      setAuthInfo(null);
+      clearAuth();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSetRole = async (role: "customer" | "merchant") => {
-    if (!authInfo?.token) return;
+  const handleSetRole = async (selectedRole: "customer" | "merchant") => {
+    if (!token) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      console.log("Setting role to:", role);
+      console.log("Setting role to:", selectedRole);
       const response = await axios.post(
         `${API_BASE_URL}/user/role`,
-        { role: role === "customer" ? "consumer" : "merchant" },
-        { headers: { Authorization: `Bearer ${authInfo.token}` } }
+        { role: selectedRole === "customer" ? "consumer" : "merchant" },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("Role set response:", response.data);
-      const { token, user } = response.data;
-      setAuthInfo({ token, address: user.address, role: user.role });
-      localStorage.setItem("fiducia_jwt", token);
+      const { token: newToken, user } = response.data;
+      setAuth(newToken, user.address, user.role);
+      localStorage.setItem("fiducia_jwt", newToken);
       localStorage.setItem("fiducia_role", user.role);
       setShowRoleSelector(false);
       console.log("Role set successfully:", user);
@@ -175,7 +166,7 @@ const AuthButton: React.FC = () => {
   };
 
   const handleLogout = () => {
-    setAuthInfo(null);
+    clearAuth();
     localStorage.removeItem("fiducia_jwt");
     localStorage.removeItem("fiducia_role");
     setShowRoleSelector(false);
@@ -187,7 +178,7 @@ const AuthButton: React.FC = () => {
       <div className="flex items-center gap-2">
         {/* Sign In Button (when connected but not authenticated) */}
         <AnimatePresence>
-          {isConnected && !authInfo && (
+          {isConnected && !token && (
             <motion.button
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -210,7 +201,7 @@ const AuthButton: React.FC = () => {
 
         {/* Logout Button (when authenticated) */}
         <AnimatePresence>
-          {authInfo && authInfo.role && (
+          {token && role && (
             <motion.button
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
