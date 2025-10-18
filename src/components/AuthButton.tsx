@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { ConnectKitButton } from "connectkit";
-import { useAccount, useSignMessage } from "wagmi";
+import { useAccount, useSignMessage, useBalance } from "wagmi";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Shield, Loader2 } from "lucide-react";
+import {User, Shield, Loader2, Wallet} from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
+
+type ContractAddresses = {
+    a3a: `0x${string}` | undefined;
+    pyusd: `0x${string}` | undefined;
+};
 
 const AuthButton: React.FC = () => {
   const { address, isConnected } = useAccount();
@@ -15,6 +20,63 @@ const AuthButton: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
+
+    const [contractAddrs, setContractAddrs] = useState<ContractAddresses>({
+        a3a: undefined,
+        pyusd: undefined,
+    });
+
+    useEffect(() => {
+        const fetchContractAddresses = async () => {
+            if (!token) return;
+
+            try {
+                // const a3aResponse = await axios.post(
+                //     `${API_BASE_URL}/contract/atatoken`,
+                //     {},
+                //     { headers: { Authorization: `Bearer ${token}` } }
+                // );
+                const pyusdResponse = await axios.post(
+                    `${API_BASE_URL}/contract/pyusd`,
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+
+                // const a3aAddr = a3aResponse.data as `0x${string}`;
+                const a3aAddr = "0x9bAaB117304f7D6517048e371025dB8f89a8DbE5";
+                const pyusdAddr = pyusdResponse.data as `0x${string}`;
+                // const pyusdAddr = "0x0116686e2291dbd5e317f47fadbfb43b599786ef";
+
+                console.log("Fetched A3A address:", a3aAddr);
+                console.log("Fetched PYUSD address:", pyusdAddr);
+
+                setContractAddrs({
+                    a3a: a3aAddr,
+                    pyusd: pyusdAddr,
+                });
+            } catch (err) {
+                console.error("Failed to fetch contract addresses:", err);
+            }
+        };
+
+        fetchContractAddresses();
+    }, [token]);
+
+    const { data: a3aBalance, isLoading: isA3aLoading } = useBalance({
+        address: address,
+        token: contractAddrs.a3a,
+    });
+
+    const { data: pyusdBalance, isLoading: isPyusdLoading } = useBalance({
+        address: address,
+        token: contractAddrs.pyusd,
+    });
+
+    const isBalanceLoading = isA3aLoading || isPyusdLoading;
+
+    useEffect(() => {
+        console.log("balance", a3aBalance, pyusdBalance)
+    }, [a3aBalance, pyusdBalance, isBalanceLoading]);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -218,6 +280,48 @@ const AuthButton: React.FC = () => {
         </AnimatePresence>
 
         <ConnectKitButton />
+
+          <AnimatePresence>
+              {token && (contractAddrs.a3a || contractAddrs.pyusd) && (
+                  <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="px-4 py-1.5 rounded-full backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] border border-green-800/50 text-white/90 text-sm font-medium flex items-center gap-2"
+                      title={`Balances for ${address}`}
+                  >
+                      {isBalanceLoading ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                          <>
+                              <Wallet className="w-3.5 h-3.5 text-green-400/70 flex-shrink-0" />
+                              <div className="flex items-center gap-2 divide-x divide-gray-600/50">
+                                  {a3aBalance && (
+                                      <div className="flex items-baseline gap-1 pr-2">
+                        <span>
+                          {parseFloat(a3aBalance.formatted).toFixed(2)}
+                        </span>
+                                          <span className="text-white/50 text-xs">
+                          {a3aBalance.symbol}
+                        </span>
+                                      </div>
+                                  )}
+                                  {pyusdBalance && (
+                                      <div className="flex items-baseline gap-1 pr-2 last:pr-0">
+                        <span>
+                          {parseFloat(pyusdBalance.formatted).toFixed(2)}
+                        </span>
+                                          <span className="text-white/50 text-xs">
+                          {pyusdBalance.symbol}
+                        </span>
+                                      </div>
+                                  )}
+                              </div>
+                          </>
+                      )}
+                  </motion.div>
+              )}
+          </AnimatePresence>
       </div>
 
       {/* Role Selector Modal */}

@@ -1,23 +1,36 @@
 import React from 'react';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { mainnet } from 'wagmi/chains';
+import { defineChain } from 'viem';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
 
+const anvilChain = defineChain({
+    id: 31337,
+    name: 'Fiducia Localnet',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: {
+        default: {
+            http: ['https://fiduciademo.123a.club/rpc'],
+        },
+    },
+    // blockExplorers: {
+    //   default: { name: 'Etherscan', url: 'https://etherscan.io' },
+    // },
+    testnet: true,
+});
+
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
-const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
 
 const config = createConfig(
     getDefaultConfig({
-        chains: [mainnet],
+        chains: [anvilChain],
+
         transports: {
-            [mainnet.id]: http(`https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`),
+            [anvilChain.id]: http('https://fiduciademo.123a.club/rpc'),
         },
 
         walletConnectProjectId,
-
         appName: 'Fiducia',
-
         appDescription: 'A decentralized protocol for AI agent communication.',
         appUrl: 'https://fiduciademo.netlify.app/',
         appIcon: '',
@@ -31,9 +44,6 @@ type Web3ProviderProps = {
 };
 
 export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
-    // useEffect(() => {
-    //     console.log(alchemyApiKey, walletConnectProjectId);
-    // }, []);
     return (
         <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
