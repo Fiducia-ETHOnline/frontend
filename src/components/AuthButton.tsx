@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ConnectKitButton } from "connectkit";
-import { useAccount, useSignMessage, useBalance } from "wagmi";
+import {useAccount, useSignMessage, useBalance} from "wagmi";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {User, Shield, Loader2, Wallet} from "lucide-react";
@@ -11,6 +11,7 @@ const API_BASE_URL = "https://fiduciademo.123a.club/api";
 type ContractAddresses = {
     a3a: `0x${string}` | undefined;
     pyusd: `0x${string}` | undefined;
+    orderContract: `0x${string}` | undefined;
 };
 
 const AuthButton: React.FC = () => {
@@ -24,6 +25,7 @@ const AuthButton: React.FC = () => {
     const [contractAddrs, setContractAddrs] = useState<ContractAddresses>({
         a3a: undefined,
         pyusd: undefined,
+        orderContract: undefined,
     });
 
     useEffect(() => {
@@ -41,18 +43,24 @@ const AuthButton: React.FC = () => {
                     {},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
+                const orderContractResponse = await axios.post(
+                    `${API_BASE_URL}/contract/order`,
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
 
                 const a3aAddr = a3aResponse.data as `0x${string}`;
-                // const a3aAddr = "0x9bAaB117304f7D6517048e371025dB8f89a8DbE5";
                 const pyusdAddr = pyusdResponse.data as `0x${string}`;
-                // const pyusdAddr = "0x0116686e2291dbd5e317f47fadbfb43b599786ef";
+                const orderContractAddr = orderContractResponse.data as `0x${string}`;
 
                 console.log("Fetched A3A address:", a3aAddr);
                 console.log("Fetched PYUSD address:", pyusdAddr);
+                console.log("Fetched OrderContract (Spender) address:", orderContractAddr);
 
                 setContractAddrs({
                     a3a: a3aAddr,
                     pyusd: pyusdAddr,
+                    orderContract: orderContractAddr,
                 });
             } catch (err) {
                 console.error("Failed to fetch contract addresses:", err);
