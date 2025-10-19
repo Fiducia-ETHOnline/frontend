@@ -148,9 +148,12 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
 
     const {
         isLoading: isApproveConfirming,
-        isSuccess: isApproveSuccess
+        isSuccess: isApproveSuccess,
+        isError: isApproveError,
+        error: approveTxError
     } = useWaitForTransactionReceipt({hash: approveHash});
-    const {isLoading: isPayConfirming, isSuccess: isPaySuccess} = useWaitForTransactionReceipt({hash: payHash});
+
+    const {isLoading: isPayConfirming, isSuccess: isPaySuccess, isError: isPayError, error: payTxError} = useWaitForTransactionReceipt({hash: payHash});
 
     useEffect(() => {
         if (isApproveSuccess) {
@@ -159,12 +162,27 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
     }, [isApproveSuccess]);
 
     useEffect(() => {
+        if (isApproveError) {
+            console.error("On-chain approve transaction failed:", approveTxError);
+            setTxError("Approval transaction failed on the blockchain.");
+            setApproveState('needed'); // Reset the button state
+        }
+    }, [isApproveError, approveTxError]);
+
+    useEffect(() => {
         if (isPaySuccess) {
             setPayState('paid');
             onOrderPaid();
         }
     }, [isPaySuccess, onOrderPaid]);
 
+    useEffect(() => {
+        if (isPayError) {
+            console.error("On-chain payment transaction failed:", payTxError);
+            setTxError("Payment transaction failed on the blockchain.");
+            setPayState('idle'); // Reset the button state
+        }
+    }, [isPayError, payTxError]);
 
     const handleApprove = async () => {
         setTxError(null);
@@ -208,7 +226,7 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
 
     return (
         <div
-            className="bg-gradient-to-br from-green-700/30 to-green-800/40 text-white/90 rounded-2xl rounded-bl-sm p-4 w-full border border-green-500/20">
+            className="bg-gradient-to-br from-green-700/30 to-green-800/40 text-white/90 rounded-2xl p-4 w-full border border-green-500/20">
             <div className="flex items-center gap-3 mb-3 pb-3 border-b border-green-500/20">
                 <CheckCircle className="w-6 h-6 text-green-300 flex-shrink-0"/>
                 <h3 className="text-lg font-semibold text-white">Order Confirmation (ID: {order.orderId})</h3>
@@ -234,9 +252,9 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
                             disabled={approveState !== 'needed'}
                             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all bg-blue-500 text-white hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {approveState === 'approving' && <><Loader className="w-4 h-4 animate-spin"/><span>Please approve in your wallet...</span></>}
+                            {approveState === 'approving' && !isApproveConfirming && <><Loader className="w-4 h-4 animate-spin"/><span>Please approve in your wallet...</span></>}
                             {isApproveConfirming && <><Loader className="w-4 h-4 animate-spin"/><span>Waiting for user approval...</span></>}
-                            {approveState === 'needed' && <><Zap className="w-4 h-4"/><span>Approve in your wallet first.</span></>}
+                            {approveState === 'needed' && !isApproveConfirming && <><Zap className="w-4 h-4"/><span>Approve in your wallet first.</span></>}
                             {approveState === 'approved' && <><ShieldCheck
                                 className="w-4 h-4"/><span>Approved!</span></>}
                         </button>
@@ -247,9 +265,9 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
                             disabled={approveState !== 'approved' || isPayConfirming || payState === 'paying'}
                             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-500 text-black hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {payState === 'paying' && <><Loader className="w-4 h-4 animate-spin"/><span>Please confirm payment in your wallet...</span></>}
+                            {payState === 'paying' && !isPayConfirming && <><Loader className="w-4 h-4 animate-spin"/><span>Please confirm payment in your wallet...</span></>}
                             {isPayConfirming && <><Loader className="w-4 h-4 animate-spin"/><span>Waiting for user payment...</span></>}
-                            {payState === 'idle' && <><Zap className="w-4 h-4"/><span>Confirm payment.</span></>}
+                            {payState === 'idle' && !isPayConfirming && <><Zap className="w-4 h-4"/><span>Confirm payment.</span></>}
                         </button>
                     </>
                 )}

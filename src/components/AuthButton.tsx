@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { ConnectKitButton } from "connectkit";
-import {useAccount, useSignMessage, useBalance} from "wagmi";
+import {useAccount, useSignMessage, useBalance, useWriteContract} from "wagmi";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {User, Shield, Loader2, Wallet} from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import {erc20Abi} from "viem";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
 
@@ -14,13 +15,18 @@ type ContractAddresses = {
     orderContract: `0x${string}` | undefined;
 };
 
+const MaxUint256: bigint = 2n ** 256n - 1n;
+
 const AuthButton: React.FC = () => {
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { token, role, setAuth, clearAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
+    const [isApproving, setIsApproving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
+
+    const { writeContractAsync } = useWriteContract();
 
     const [contractAddrs, setContractAddrs] = useState<ContractAddresses>({
         a3a: undefined,
@@ -81,6 +87,42 @@ const AuthButton: React.FC = () => {
     });
 
     const isBalanceLoading = isA3aLoading || isPyusdLoading;
+
+    const handleApproveAll = async () => {
+        if (!contractAddrs.orderContract || !contractAddrs.pyusd || !contractAddrs.a3a) {
+            setError("Contract addresses are not loaded yet. Cannot approve.");
+            return;
+        }
+
+        setIsApproving(true);
+        setError(null);
+
+        try {
+            console.log(`Approving PYUSD for spender: ${contractAddrs.orderContract}`);
+            await writeContractAsync({
+                address: contractAddrs.pyusd,
+                abi: erc20Abi,
+                functionName: 'approve',
+                args: [contractAddrs.orderContract, MaxUint256],
+            });
+            console.log("PYUSD Approved successfully!");
+
+            console.log(`Approving A3A for spender: ${contractAddrs.orderContract}`);
+            await writeContractAsync({
+                address: contractAddrs.a3a,
+                abi: erc20Abi,
+                functionName: 'approve',
+                args: [contractAddrs.orderContract, MaxUint256],
+            });
+            console.log("A3A Approved successfully!");
+
+        } catch (err: any) {
+            console.error("Approval failed:", err);
+            setError(err.shortMessage || "User rejected the transaction or an error occurred.");
+        } finally {
+            setIsApproving(false);
+        }
+    };
 
     useEffect(() => {
         console.log("balance", a3aBalance, pyusdBalance)
@@ -246,6 +288,30 @@ const AuthButton: React.FC = () => {
   return (
     <>
       <div className="flex items-center gap-2">
+          <AnimatePresence>
+              {token && role && (
+                  <motion.button
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      onClick={handleApproveAll}
+                      disabled={isApproving || !contractAddrs.orderContract}
+                      className="px-4 py-1.5 rounded-full backdrop-blur-xl backdrop-saturate-[180%] border border-blue-800/50 text-white/90 text-sm font-medium transition-all hover:border-blue-700/60 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      title="Approve tokens for the Order Contract"
+                  >
+                      {isApproving ? (
+                          <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Approving...</span>
+                          </>
+                      ) : (
+                          <>
+                              <span>Approve Tokens</span>
+                          </>
+                      )}
+                  </motion.button>
+              )}
+          </AnimatePresence>
         {/* Sign In Button (when connected but not authenticated) */}
         <AnimatePresence>
           {isConnected && !token && (
@@ -255,12 +321,12 @@ const AuthButton: React.FC = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={handleLogin}
               disabled={loading}
-              className="px-4 py-1.5 rounded-full backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] border border-green-800/50 text-white/90 text-sm font-medium transition-all hover:bg-[rgba(17,25,20,0.60)] hover:border-green-700/60 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-1.5 rounded-full backdrop-blur-xl backdrop-saturate-[180%] border border-green-800/50 text-white/90 text-sm font-medium transition-all hover:border-green-700/60 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Signing...</span>
+                  <span>Signing In...</span>
                 </>
               ) : (
                 <span>Sign In</span>
