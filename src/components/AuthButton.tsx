@@ -31,19 +31,19 @@ const AuthButton: React.FC = () => {
             if (!token) return;
 
             try {
-                // const a3aResponse = await axios.post(
-                //     `${API_BASE_URL}/contract/atatoken`,
-                //     {},
-                //     { headers: { Authorization: `Bearer ${token}` } }
-                // );
+                const a3aResponse = await axios.post(
+                    `${API_BASE_URL}/contract/atatoken`,
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
                 const pyusdResponse = await axios.post(
                     `${API_BASE_URL}/contract/pyusd`,
                     {},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
-                // const a3aAddr = a3aResponse.data as `0x${string}`;
-                const a3aAddr = "0x9bAaB117304f7D6517048e371025dB8f89a8DbE5";
+                const a3aAddr = a3aResponse.data as `0x${string}`;
+                // const a3aAddr = "0x9bAaB117304f7D6517048e371025dB8f89a8DbE5";
                 const pyusdAddr = pyusdResponse.data as `0x${string}`;
                 // const pyusdAddr = "0x0116686e2291dbd5e317f47fadbfb43b599786ef";
 
