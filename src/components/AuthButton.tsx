@@ -39,19 +39,16 @@ const AuthButton: React.FC = () => {
             if (!token) return;
 
             try {
-                const a3aResponse = await axios.post(
-                    `${API_BASE_URL}/contract/atatoken`,
-                    {},
+                const a3aResponse = await axios.get(
+                    `${API_BASE_URL}/contract/a3atoken`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
-                const pyusdResponse = await axios.post(
+                const pyusdResponse = await axios.get(
                     `${API_BASE_URL}/contract/pyusd`,
-                    {},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
-                const orderContractResponse = await axios.post(
+                const orderContractResponse = await axios.get(
                     `${API_BASE_URL}/contract/order`,
-                    {},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
@@ -87,6 +84,12 @@ const AuthButton: React.FC = () => {
     });
 
     const isBalanceLoading = isA3aLoading || isPyusdLoading;
+
+    useEffect(() => {
+        if (token && !isConnected) {
+            handleLogout();
+        }
+    }, [isConnected, token, clearAuth]);
 
     const handleApproveAll = async () => {
         if (!contractAddrs.orderContract || !contractAddrs.pyusd || !contractAddrs.a3a) {

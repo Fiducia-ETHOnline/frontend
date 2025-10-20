@@ -1,32 +1,18 @@
 import React from 'react';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { defineChain } from 'viem';
+import { sepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
 
-const anvilChain = defineChain({
-    id: 31337,
-    name: 'Fiducia Localnet',
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    rpcUrls: {
-        default: {
-            http: ['https://fiduciademo.123a.club/rpc'],
-        },
-    },
-    // blockExplorers: {
-    //   default: { name: 'Etherscan', url: 'https://etherscan.io' },
-    // },
-    testnet: true,
-});
-
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+const sepoliaRpcUrl = "https://sepolia.infura.io/v3/80446f4b733d4b27aef859104aa333d1";
 
 const config = createConfig(
     getDefaultConfig({
-        chains: [anvilChain],
+        chains: [sepolia],
 
         transports: {
-            [anvilChain.id]: http('https://fiduciademo.123a.club/rpc'),
+            [sepolia.id]: http(sepoliaRpcUrl),
         },
 
         walletConnectProjectId,
@@ -52,3 +38,4 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         </WagmiProvider>
     );
 };
+
