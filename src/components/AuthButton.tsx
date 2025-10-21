@@ -153,7 +153,7 @@ const BuyA3AModal: React.FC<BuyA3AModalProps> = ({onClose, pyusdBalance}) => {
 };
 
 const AuthButton: React.FC = () => {
-    const {address, isConnected} = useAccount();
+    const {address, isConnected, status} = useAccount();
     const {signMessageAsync} = useSignMessage();
     const {token, role, setAuth, clearAuth} = useAuthStore();
     const [loading, setLoading] = useState(false);
@@ -248,10 +248,11 @@ const AuthButton: React.FC = () => {
     }, [pyusdAllowance, a3aAllowance]);
 
     useEffect(() => {
-        if (token && !isConnected) {
+        // trigger logout if the status is disconnected
+        if (token && status === 'disconnected') {
             handleLogout();
         }
-    }, [isConnected, token, clearAuth]);
+    }, [status, token]);
 
     const handleApproveAll = async () => {
         if (!contractAddrs.orderContract || !contractAddrs.pyusd || !contractAddrs.a3a) {
