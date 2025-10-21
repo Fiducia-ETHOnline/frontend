@@ -11,4 +11,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      '/rpc': {
+        target: 'https://fiduciademo.123a.club',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
 })
