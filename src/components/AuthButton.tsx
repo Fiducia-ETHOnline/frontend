@@ -36,7 +36,7 @@ const BuyA3AModal: React.FC<BuyA3AModalProps> = ({onClose, pyusdBalance}) => {
         if (isNaN(num) || num < 0) {
             return {value: "Invalid Input", error: true};
         }
-        return {value: (num * 20).toFixed(2), error: false};
+        return {value: (num * 100).toFixed(2), error: false};
     }, [pyusdAmount]);
 
     const handleBuy = async () => {
@@ -103,7 +103,7 @@ const BuyA3AModal: React.FC<BuyA3AModalProps> = ({onClose, pyusdBalance}) => {
                     <>
                         <h2 className="text-2xl font-bold text-white mb-2">Buy A3A token</h2>
                         <p className="text-white/60 text-sm mb-6">
-                            Use your PYUSD to purchase A3A token <br /> (1 PYUSD = 20 A3A)
+                            Use your PYUSD to purchase A3A token <br /> (1 PYUSD = 100 A3A)
                         </p>
 
                         <div className="space-y-4">
