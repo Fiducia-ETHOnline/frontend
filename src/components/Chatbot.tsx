@@ -15,8 +15,8 @@ import {
 import ReactMarkdown from "react-markdown";
 import {cn} from "@/lib/utils";
 import {useAuthStore} from "@/store/authStore";
-import {useSendTransaction, useWaitForTransactionReceipt, useWriteContract} from "wagmi";
-import {erc20Abi} from "viem";
+import {useAccount, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract} from "wagmi";
+import {erc20Abi, parseEther} from "viem";
 
 const MaxUint256: bigint = 2n ** 256n - 1n;
 
@@ -142,6 +142,53 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
     const [approveState, setApproveState] = useState<'needed' | 'approving' | 'confirming' | 'approved'>('needed');
     const [payState, setPayState] = useState<'idle' | 'paying' | 'confirming' | 'paid'>('idle');
     const [txError, setTxError] = useState<string | null>(null);
+    const { address } = useAccount();
+    const {token} = useAuthStore();
+
+    const [contractAddrs, setContractAddrs] = useState<ContractAddresses>({
+        a3a: undefined,
+        pyusd: undefined,
+        orderContract: undefined,
+    });
+
+    useEffect(() => {
+        const fetchContractAddresses = async () => {
+            if (!token) return;
+
+            try {
+                const a3aResponse = await axios.get(
+                    `${API_BASE_URL}/contract/a3atoken`,
+                    {headers: {Authorization: `Bearer ${token}`}}
+                );
+                const pyusdResponse = await axios.get(
+                    `${API_BASE_URL}/contract/pyusd`,
+                    {headers: {Authorization: `Bearer ${token}`}}
+                );
+                const orderContractResponse = await axios.get(
+                    `${API_BASE_URL}/contract/order`,
+                    {headers: {Authorization: `Bearer ${token}`}}
+                );
+
+                const a3aAddr = a3aResponse.data as `0x${string}`;
+                const pyusdAddr = pyusdResponse.data as `0x${string}`;
+                const orderContractAddr = orderContractResponse.data as `0x${string}`;
+
+                console.log("Fetched A3A address:", a3aAddr);
+                console.log("Fetched PYUSD address:", pyusdAddr);
+                console.log("Fetched OrderContract (Spender) address:", orderContractAddr);
+
+                setContractAddrs({
+                    a3a: a3aAddr,
+                    pyusd: pyusdAddr,
+                    orderContract: orderContractAddr,
+                });
+            } catch (err) {
+                console.error("Failed to fetch contract addresses:", err);
+            }
+        };
+
+        fetchContractAddresses();
+    }, [token]);
 
     const {data: approveHash, writeContractAsync: approveAsync} = useWriteContract();
     const {data: payHash, sendTransactionAsync} = useSendTransaction();
@@ -206,6 +253,31 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
             setApproveState('needed');
         }
     };
+
+    const { data: pyusdAllowance } = useReadContract({
+        address: contractAddrs.pyusd,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [address!, contractAddrs.orderContract!],
+    });
+
+    const { data: a3aAllowance } = useReadContract({
+        address: contractAddrs.a3a,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [address!, contractAddrs.orderContract!],
+    });
+
+    useEffect(() => {
+        if (pyusdAllowance !== undefined && a3aAllowance !== undefined) {
+            const sufficientAllowance = parseEther('1000000');
+            if (pyusdAllowance >= sufficientAllowance && a3aAllowance >= sufficientAllowance) {
+                setApproveState('approved');
+            } else {
+                setApproveState('needed');
+            }
+        }
+    }, [pyusdAllowance, a3aAllowance]);
 
     const handleConfirmOrder = async () => {
         setTxError(null);
@@ -341,9 +413,9 @@ const Chatbot: React.FC = () => {
                 const pyusdAddr = pyusdResponse.data as `0x${string}`;
                 const orderContractAddr = orderContractResponse.data as `0x${string}`;
 
-                console.log("Fetched A3A address:", a3aAddr);
-                console.log("Fetched PYUSD address:", pyusdAddr);
-                console.log("Fetched OrderContract (Spender) address:", orderContractAddr);
+                // console.log("Fetched A3A address:", a3aAddr);
+                // console.log("Fetched PYUSD address:", pyusdAddr);
+                // console.log("Fetched OrderContract (Spender) address:", orderContractAddr);
 
                 setContractAddrs({
                     a3a: a3aAddr,
