@@ -413,9 +413,9 @@ const Chatbot: React.FC = () => {
                 const pyusdAddr = pyusdResponse.data as `0x${string}`;
                 const orderContractAddr = orderContractResponse.data as `0x${string}`;
 
-                console.log("Fetched A3A address:", a3aAddr);
-                console.log("Fetched PYUSD address:", pyusdAddr);
-                console.log("Fetched OrderContract (Spender) address:", orderContractAddr);
+                // console.log("Fetched A3A address:", a3aAddr);
+                // console.log("Fetched PYUSD address:", pyusdAddr);
+                // console.log("Fetched OrderContract (Spender) address:", orderContractAddr);
 
                 setContractAddrs({
                     a3a: a3aAddr,
