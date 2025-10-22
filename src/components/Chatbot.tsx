@@ -15,8 +15,9 @@ import {
 import ReactMarkdown from "react-markdown";
 import {cn} from "@/lib/utils";
 import {useAuthStore} from "@/store/authStore";
-import {useSendTransaction, useWaitForTransactionReceipt, useWriteContract} from "wagmi";
+import {useSendTransaction, useWaitForTransactionReceipt, useWriteContract, useAccount} from "wagmi";
 import {erc20Abi} from "viem";
+import { useNotification } from "@blockscout/app-sdk";
 
 const MaxUint256: bigint = 2n ** 256n - 1n;
 
@@ -145,6 +146,8 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
 
     const {data: approveHash, writeContractAsync: approveAsync} = useWriteContract();
     const {data: payHash, sendTransactionAsync} = useSendTransaction();
+    const { chainId } = useAccount();
+    const { openTxToast } = useNotification();
 
     const {
         isLoading: isApproveConfirming,
@@ -188,18 +191,25 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
         setTxError(null);
         setApproveState('approving');
         try {
-            await approveAsync({
+            const pyusdTxHash = await approveAsync({
                 address: pyusdAddress,
                 abi: erc20Abi,
                 functionName: 'approve',
                 args: [orderContractAddress, MaxUint256],
             });
-            await approveAsync({
+            if (chainId && pyusdTxHash) {
+                openTxToast(chainId.toString(), pyusdTxHash);
+            }
+
+            const a3aTxHash = await approveAsync({
                 address: a3aAddress,
                 abi: erc20Abi,
                 functionName: 'approve',
                 args: [orderContractAddress, MaxUint256],
             });
+            if (chainId && a3aTxHash) {
+                openTxToast(chainId.toString(), a3aTxHash);
+            }
         } catch (err: any) {
             console.error("Approve failed:", err);
             setTxError(err.shortMessage || "User rejected the transaction.");
@@ -212,11 +222,14 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
         setPayState('paying');
         try {
             const txData = JSON.parse(order.transaction);
-            await sendTransactionAsync({
+            const txHash = await sendTransactionAsync({
                 to: txData.to as `0x${string}`,
                 data: txData.data as `0x${string}`,
                 value: BigInt(txData.value || 0),
             });
+            if (chainId && txHash) {
+                openTxToast(chainId.toString(), txHash);
+            }
         } catch (err: any) {
             console.error("Payment failed:", err);
             setTxError(err.shortMessage || "User rejected the transaction.");

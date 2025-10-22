@@ -3,7 +3,7 @@ import { WagmiProvider, createConfig, http } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
-import { TransactionPopupProvider } from "@blockscout/app-sdk";
+import { NotificationProvider, TransactionPopupProvider } from "@blockscout/app-sdk";
 
 
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
@@ -37,7 +37,9 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
             <QueryClientProvider client={queryClient}>
                 <ConnectKitProvider theme="midnight" mode="dark">
                     <TransactionPopupProvider>
-                        {children}
+                        <NotificationProvider>
+                             {children}
+                         </NotificationProvider>
                 </TransactionPopupProvider></ConnectKitProvider>
             </QueryClientProvider>
         </WagmiProvider>
