@@ -2,10 +2,12 @@ import React, {useState, useEffect, useMemo} from "react";
 import {ConnectKitButton} from "connectkit";
 import {useAccount, useSignMessage, useBalance, useWriteContract, useReadContract, useSendTransaction} from "wagmi";
 import axios from "axios";
-import {motion, AnimatePresence} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuthStore } from "@/store/authStore";
+import { useNotification } from "@blockscout/app-sdk";
 import {User, Shield, Loader2, Wallet, ShoppingCart, CheckCircle2, ArrowRight} from "lucide-react";
-import {useAuthStore} from "@/store/authStore";
 import {erc20Abi, parseEther} from "viem";
+
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
 
@@ -153,7 +155,7 @@ const BuyA3AModal: React.FC<BuyA3AModalProps> = ({onClose, pyusdBalance}) => {
 };
 
 const AuthButton: React.FC = () => {
-    const {address, isConnected, status} = useAccount();
+    const {address, isConnected, status, chainId} = useAccount();
     const {signMessageAsync} = useSignMessage();
     const {token, role, setAuth, clearAuth} = useAuthStore();
     const [loading, setLoading] = useState(false);
@@ -163,7 +165,8 @@ const AuthButton: React.FC = () => {
     const [needsApproval, setNeedsApproval] = useState(true);
     const [showBuyModal, setShowBuyModal] = useState(false);
 
-    const {writeContractAsync} = useWriteContract();
+    const { writeContractAsync } = useWriteContract();
+    const { openTxToast } = useNotification();
 
     const [contractAddrs, setContractAddrs] = useState<ContractAddresses>({
         a3a: undefined,
@@ -260,27 +263,34 @@ const AuthButton: React.FC = () => {
             return;
         }
 
+        if (!chainId) {
+            setError("Chain ID not detected. Please ensure your wallet is connected.");
+            return;
+        }
+
         setIsApproving(true);
         setError(null);
 
         try {
             console.log(`Approving PYUSD for spender: ${contractAddrs.orderContract}`);
-            await writeContractAsync({
+            const pyusdTxHash = await writeContractAsync({
                 address: contractAddrs.pyusd,
                 abi: erc20Abi,
                 functionName: 'approve',
                 args: [contractAddrs.orderContract, MaxUint256],
             });
-            console.log("PYUSD Approved successfully!");
+            console.log("PYUSD Approved successfully! Tx:", pyusdTxHash);
+            openTxToast(chainId.toString(), pyusdTxHash);
 
             console.log(`Approving A3A for spender: ${contractAddrs.orderContract}`);
-            await writeContractAsync({
+            const a3aTxHash = await writeContractAsync({
                 address: contractAddrs.a3a,
                 abi: erc20Abi,
                 functionName: 'approve',
                 args: [contractAddrs.orderContract, MaxUint256],
             });
-            console.log("A3A Approved successfully!");
+            console.log("A3A Approved successfully! Tx:", a3aTxHash);
+            openTxToast(chainId.toString(), a3aTxHash);
 
         } catch (err: any) {
             console.error("Approval failed:", err);
