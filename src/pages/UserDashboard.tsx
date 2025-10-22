@@ -83,7 +83,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const config = statusConfig[status] || statusConfig.AWAITING_FULFILLMENT;
 
   return (
-    <Badge variant={config.variant} className="flex items-center gap-1.5 px-3 py-1.5">
+    <Badge variant={config.variant} className="flex items-center gap-1.5 px-3 py-1.5 text-white">
       {config.icon}
       <span>{config.label}</span>
     </Badge>
@@ -164,7 +164,7 @@ const OrderRow: React.FC<{
   return (
     <>
       <TableRow className="border-b border-white/10 hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => setShowDetails(!showDetails)}>
-        <TableCell className="py-5">
+        <TableCell className="py-5 first:pl-5 pl-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
               <ShoppingBag className="w-5 h-5 text-green-400" />
@@ -448,6 +448,7 @@ const CustomerDashboard: React.FC = () => {
       if (!response.ok) throw new Error("Failed to fetch orders");
 
       const data = await response.json();
+      console.log("Fetched orders:", data);
       setOrders(data);
     } catch (err) {
       console.error("Failed to fetch orders:", err);
@@ -656,7 +657,7 @@ const CustomerDashboard: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/60 font-semibold">Order ID & Merchant</TableHead>
+                  <TableHead className="text-white/60 first:pl-5 pl-0 font-semibold">Order ID & Merchant</TableHead>
                   <TableHead className="text-white/60 font-semibold">Description</TableHead>
                   <TableHead className="text-white/60 font-semibold">Amount</TableHead>
                   <TableHead className="text-white/60 font-semibold">Status</TableHead>
