@@ -31,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuthStore } from "@/store/authStore";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
 
@@ -420,6 +421,9 @@ const CustomerDashboard: React.FC = () => {
   const { openPopup } = useTransactionPopup();
   const { address } = useAccount();
   const { token, role } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === "/home";
 
   const fetchOrders = async () => {
     if (!token) {
@@ -544,16 +548,41 @@ const CustomerDashboard: React.FC = () => {
       {/* Header */}
       <header className="flex justify-between items-center px-8 py-6 relative z-10">
         <div className="bg-[#0B1410] py-3 px-6 rounded-4xl flex items-center gap-5">
-          <HoverBorderGradient
-            containerClassName="rounded-full"
-            as="button"
-            className="bg-[#1A2620] text-white flex items-center space-x-2"
-          >
-            <span>Orders</span>
-          </HoverBorderGradient>
-          <span className="text-white/60 hover:text-white cursor-pointer transition-colors">
-            Home
-          </span>
+          {isHome ? (
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              as="button"
+              className="bg-[#1A2620] text-white flex items-center space-x-2"
+              onClick={() => navigate("/home")}
+            >
+              <span>Home</span>
+            </HoverBorderGradient>
+          ) : (
+            <span
+              className="text-white/60 hover:text-white cursor-pointer transition-colors px-4 py-2"
+              onClick={() => navigate("/home")}
+            >
+              Home
+            </span>
+          )}
+
+          {!isHome ? (
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              as="button"
+              className="bg-[#1A2620] text-white flex items-center space-x-2"
+              onClick={() => navigate("/dashboard")}
+            >
+              <span>{role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard` : "Dashboard"}</span>
+            </HoverBorderGradient>
+          ) : (
+            <span
+              className="text-white/60 hover:text-white cursor-pointer transition-colors px-4 py-2"
+              onClick={() => navigate("/dashboard")}
+            >
+              {role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard` : "Dashboard"}
+            </span>
+          )}
         </div>
         <div className="auth-area">
           <AuthButton />
