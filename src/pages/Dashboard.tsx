@@ -16,7 +16,7 @@ function Dashboard() {
       <div className="absolute inset-0 z-0">
         <DarkVeil hueShift={60} />
       </div>
-      <header className="flex justify-between items-center px-8 py-6 relative z-10">
+      <header className="flex justify-between items-center px-8 py-6 relative z-20">
         <div className="bg-[#0B1410] py-3 px-6 rounded-4xl flex items-center gap-5">
           {isHome ? (
             <HoverBorderGradient
