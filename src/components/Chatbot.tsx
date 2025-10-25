@@ -451,7 +451,16 @@ type ContractAddresses = {
   orderContract: `0x${string}` | undefined;
 };
 
-const Chatbot: React.FC = () => {
+interface ChatbotProps {
+  menuAction?: {
+    action: "add" | "update" | "delete";
+    itemName?: string;
+  } | null;
+  onMenuActionComplete?: () => void;
+  autoEnableAdminMode?: boolean;
+}
+
+const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, autoEnableAdminMode }) => {
   // @ts-ignore
   const { role } = useAuthStore();
   const { address } = useAccount();
@@ -468,6 +477,8 @@ const Chatbot: React.FC = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [adminModeInitialized, setAdminModeInitialized] = useState(false);
   const [registrationStep, setRegistrationStep] = useState<string | null>(null);
+  const [menuActionStep, setMenuActionStep] = useState<string | null>(null);
+  const [currentItemName, setCurrentItemName] = useState<string | null>(null);
   const [merchantData, setMerchantData] = useState({
     wallet: "",
     items: [] as Array<{ name: string; price: string }>,
@@ -598,7 +609,8 @@ const Chatbot: React.FC = () => {
   }, [messages.length]);
 
   useEffect(() => {
-    if (role === "merchant" && isAdminMode && !adminModeInitialized) {
+    // Only trigger registration flow if admin mode is manually enabled (not from menu actions)
+    if (role === "merchant" && isAdminMode && !adminModeInitialized && !autoEnableAdminMode && !menuActionStep) {
       setAdminModeInitialized(true);
       sendMessageToAPI("/admin on", false).then(() => {
         setRegistrationStep("wallet");
@@ -612,7 +624,57 @@ const Chatbot: React.FC = () => {
         ]);
       });
     }
-  }, [isAdminMode, role, adminModeInitialized]);
+  }, [isAdminMode, role, adminModeInitialized, autoEnableAdminMode, menuActionStep]);
+
+  // Auto-enable admin mode when prop is set (from menu actions)
+  useEffect(() => {
+    if (autoEnableAdminMode && role === "merchant" && !isAdminMode) {
+      setIsAdminMode(true);
+      setAdminModeInitialized(true); // Mark as initialized to prevent registration flow
+    }
+  }, [autoEnableAdminMode, role]);
+
+  // Handle menu actions from MerchantMenu component
+  useEffect(() => {
+    if (menuAction && role === "merchant" && !registrationStep) {
+      const handleMenuAction = async () => {
+        // Clear messages to start fresh for menu action
+        setMessages([]);
+
+        setCurrentItemName(menuAction.itemName || null);
+        setMenuActionStep(menuAction.action);
+
+        // Send admin on command in the background first
+        await sendMessageToAPI("/admin on", false, false);
+
+        if (menuAction.action === "add") {
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                "Let's add a new menu item!\n\nPlease provide the item details in the format:\n**Item Name - $Price**\n\nFor example: Margherita Pizza - $12.99",
+            },
+          ]);
+        } else if (menuAction.action === "update" && menuAction.itemName) {
+          setMessages([
+            {
+              role: "assistant",
+              content: `Let's update the price for "${menuAction.itemName}".\n\nPlease provide the new price (e.g., 15.99):`,
+            },
+          ]);
+        } else if (menuAction.action === "delete" && menuAction.itemName) {
+          setMessages([
+            {
+              role: "assistant",
+              content: `Are you sure you want to delete "${menuAction.itemName}"?\n\nType "yes" to confirm or "no" to cancel.`,
+            },
+          ]);
+        }
+      };
+
+      handleMenuAction();
+    }
+  }, [menuAction, role]);
 
   const toggleAdminMode = () => {
     const newAdminMode = !isAdminMode;
@@ -620,6 +682,16 @@ const Chatbot: React.FC = () => {
 
     if (!newAdminMode) {
       setAdminModeInitialized(false);
+    }
+  };
+
+  const resetMenuActionState = () => {
+    setMenuActionStep(null);
+    setCurrentItemName(null);
+    setIsAdminMode(false);
+    setAdminModeInitialized(false);
+    if (onMenuActionComplete) {
+      onMenuActionComplete();
     }
   };
 
@@ -770,10 +842,127 @@ const Chatbot: React.FC = () => {
     adjustHeight(true);
     setAttachments([]);
 
-    if (role === "merchant" && isAdminMode && registrationStep) {
+    // Priority order: registration flow > menu action flow > regular chat
+    if (role === "merchant" && registrationStep && isAdminMode) {
+      // Only handle registration if admin mode is manually enabled
       await handleMerchantRegistration(userMessage);
+    } else if (role === "merchant" && menuActionStep && !registrationStep) {
+      // Only handle menu actions if NOT in registration flow
+      await handleMenuActionFlow(userMessage);
     } else {
       await sendMessageToAPI(userMessage, true);
+    }
+  };
+
+  const handleMenuActionFlow = async (userMessage: string) => {
+    // Show user's message
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+
+    switch (menuActionStep) {
+      case "add":
+        // Parse menu item (Item Name - $Price or Item Name: $Price)
+        const itemRegex = /(.+?)\s*[-:]\s*\$?(\d+(?:\.\d{2})?)/;
+        const match = userMessage.match(itemRegex);
+
+        if (match) {
+          const itemName = match[1].trim().replace(/^[-•*]\s*/, "");
+          const price = match[2];
+
+          // Send add_item command to API
+          await sendMessageToAPI(`/add_item:${itemName}:${price}`, false, false);
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `✅ Successfully added "${itemName}" for $${parseFloat(price).toFixed(2)} to your menu!`,
+            },
+          ]);
+
+          // Reset menu action state
+          setTimeout(() => resetMenuActionState(), 1500);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                "I couldn't parse the menu item. Please use the format:\n**Item Name - $Price**\n\nFor example: Margherita Pizza - $12.99",
+            },
+          ]);
+        }
+        break;
+
+      case "update":
+        const priceMatch = userMessage.match(/\$?(\d+(?:\.\d{2})?)/);
+        const newPrice = priceMatch ? priceMatch[1] : userMessage;
+
+        if (currentItemName && !isNaN(parseFloat(newPrice))) {
+          // Send update_price command to API
+          await sendMessageToAPI(
+            `/update_price:${currentItemName}:${newPrice}`,
+            false,
+            false
+          );
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `✅ Successfully updated the price of "${currentItemName}" to $${parseFloat(newPrice).toFixed(2)}!`,
+            },
+          ]);
+
+          // Reset menu action state
+          setTimeout(() => resetMenuActionState(), 1500);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                "Please provide a valid price (e.g., 15.99 or $15.99).",
+            },
+          ]);
+        }
+        break;
+
+      case "delete":
+        if (userMessage.toLowerCase() === "yes" && currentItemName) {
+          // Send remove_item command to API
+          await sendMessageToAPI(`/remove_item:${currentItemName}`, false, false);
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `✅ Successfully deleted "${currentItemName}" from your menu!`,
+            },
+          ]);
+
+          // Reset menu action state
+          setTimeout(() => resetMenuActionState(), 1500);
+        } else if (userMessage.toLowerCase() === "no") {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "Deletion cancelled. Your menu item is safe!",
+            },
+          ]);
+
+          // Reset menu action state
+          setTimeout(() => resetMenuActionState(), 1500);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: 'Please type "yes" to confirm deletion or "no" to cancel.',
+            },
+          ]);
+        }
+        break;
     }
   };
 

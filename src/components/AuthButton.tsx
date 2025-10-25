@@ -8,6 +8,7 @@ import {
   useReadContract,
   useSendTransaction,
   useWaitForTransactionReceipt,
+  useDisconnect,
 } from "wagmi";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -278,7 +279,7 @@ const BuyA3AModal: React.FC<BuyA3AModalProps> = ({
                     Insufficient PYUSD balance
                   </p>
                   <motion.a
-                    href="https://cloud.google.com/application/web3/faucet"
+                    href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia/pyusd"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/40 rounded-lg text-yellow-300 text-xs hover:bg-yellow-500/30 transition-all"
@@ -515,6 +516,7 @@ const MintNFTModal: React.FC<MintNFTModalProps> = ({ onClose, onSuccess }) => {
 const AuthButton: React.FC = () => {
   const { address, isConnected, status, chainId } = useAccount();
   const { signMessageAsync } = useSignMessage();
+  const { disconnect } = useDisconnect();
   const { token, role, setAuth, clearAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -637,16 +639,18 @@ const AuthButton: React.FC = () => {
         | "customer"
         | "merchant"
         | null;
+      const storedMerchantId = localStorage.getItem("fiducia_merchant_id");
 
       // Only restore session if we have a token, an address, and we're not already authenticated
       if (storedToken && address && !token) {
         try {
-          setAuth(storedToken, address, storedRole);
+          setAuth(storedToken, address, storedRole, storedMerchantId);
           console.log("Session restored for:", address);
         } catch (err) {
           console.error("Session validation failed", err);
           localStorage.removeItem("fiducia_jwt");
           localStorage.removeItem("fiducia_role");
+          localStorage.removeItem("fiducia_merchant_id");
           clearAuth();
         }
       } else if (
@@ -720,8 +724,11 @@ const AuthButton: React.FC = () => {
 
       // Step 5: Check if role needs to be set
       if (!user.role) {
-        setAuth(token, user.address, null);
+        setAuth(token, user.address, null, user.merchant_id || null);
         localStorage.setItem("fiducia_jwt", token);
+        if (user.merchant_id) {
+          localStorage.setItem("fiducia_merchant_id", user.merchant_id);
+        }
 
         // If we have a pending role (from role selection), complete the setup
         if (pendingRole) {
@@ -731,9 +738,12 @@ const AuthButton: React.FC = () => {
           setShowRoleSelector(true);
         }
       } else {
-        setAuth(token, user.address, user.role);
+        setAuth(token, user.address, user.role, user.merchant_id || null);
         localStorage.setItem("fiducia_jwt", token);
         localStorage.setItem("fiducia_role", user.role);
+        if (user.merchant_id) {
+          localStorage.setItem("fiducia_merchant_id", user.merchant_id);
+        }
         setPendingRole(null);
         console.log("Login successful!", user);
 
@@ -817,9 +827,12 @@ const AuthButton: React.FC = () => {
 
       console.log("Role set response:", response.data);
       const { token: newToken, user } = response.data;
-      setAuth(newToken, user.address, user.role);
+      setAuth(newToken, user.address, user.role, user.merchant_id || null);
       localStorage.setItem("fiducia_jwt", newToken);
       localStorage.setItem("fiducia_role", user.role);
+      if (user.merchant_id) {
+        localStorage.setItem("fiducia_merchant_id", user.merchant_id);
+      }
       setPendingRole(null);
       console.log("Role set successfully:", user);
 
@@ -883,8 +896,10 @@ const AuthButton: React.FC = () => {
     clearAuth();
     localStorage.removeItem("fiducia_jwt");
     localStorage.removeItem("fiducia_role");
+    localStorage.removeItem("fiducia_merchant_id");
     setShowRoleSelector(false);
-    console.log("Logged out.");
+    disconnect();
+    console.log("Logged out and wallet disconnected.");
   };
 
   return (

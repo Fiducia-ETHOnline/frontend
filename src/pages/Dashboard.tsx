@@ -1,15 +1,80 @@
 import DarkVeil from "@/components/DarkVeil";
 import AuthButton from "../components/AuthButton";
 import Chatbot from "../components/Chatbot";
+import MerchantMenu from "../components/MerchantMenu";
+import MerchantNFTCard from "../components/MerchantNFTCard";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const API_BASE_URL = "https://fiduciademo.123a.club/api";
 
 function Dashboard() {
-  const { role } = useAuthStore();
+  const { role, token, merchantId } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/home";
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [menuAction, setMenuAction] = useState<{
+    action: "add" | "update" | "delete";
+    itemName?: string;
+  } | null>(null);
+  const [showChatbot, setShowChatbot] = useState(false);
+
+  useEffect(() => {
+    const checkMerchantProfile = async () => {
+      if (role !== "merchant" || !token || !merchantId) {
+        setLoadingProfile(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}/merchant/${merchantId}/profile`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setHasProfile(!!response.data);
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          setHasProfile(false);
+        } else {
+          console.error("Failed to check merchant profile:", err);
+          setHasProfile(false);
+        }
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    checkMerchantProfile();
+  }, [role, token, merchantId]);
+
+  const handleMenuAction = (action: "add" | "update" | "delete", itemName?: string) => {
+    setMenuAction({ action, itemName });
+    setShowChatbot(true);
+  };
+
+  const handleMenuActionComplete = async () => {
+    setMenuAction(null);
+    setShowChatbot(false);
+
+    // Refetch profile to update menu
+    if (role === "merchant" && token && merchantId) {
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}/merchant/${merchantId}/profile`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setHasProfile(!!response.data);
+      } catch (err: any) {
+        console.error("Failed to refresh merchant profile:", err);
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0a0a0a] relative">
@@ -60,7 +125,18 @@ function Dashboard() {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-3 py-2 relative z-10">
-        <Chatbot />
+        {role === "merchant" && !loadingProfile && hasProfile && !showChatbot ? (
+          <div className="w-full max-w-6xl flex flex-col items-center gap-6">
+            <MerchantNFTCard />
+            <MerchantMenu onActionClick={handleMenuAction} />
+          </div>
+        ) : (
+          <Chatbot
+            menuAction={menuAction}
+            onMenuActionComplete={handleMenuActionComplete}
+            autoEnableAdminMode={!!menuAction}
+          />
+        )}
       </main>
 
       <footer className="px-8 py-6 text-center bg-white/[0.03] border-t border-white/10 relative z-10">
