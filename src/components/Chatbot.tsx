@@ -16,6 +16,7 @@ import {
   Zap,
   Shield,
   Settings,
+  ArrowRight,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { erc20Abi, parseEther } from "viem";
+import { useNavigate } from "react-router-dom";
 
 const MaxUint256: bigint = 2n ** 256n - 1n;
 
@@ -431,16 +433,30 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
 };
 
 const OrderStatusPlaceholder: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-4 w-full backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] rounded-3xl border border-green-800/50 p-8 text-center"
+      className="mt-4 w-full backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] rounded-3xl border border-green-800/50 p-6 text-center"
     >
-      <h3 className="text-xl font-semibold text-white mb-2">
-        Current Order Status
-      </h3>
-      <p className="text-white/60">Waiting for status update...</p>
+      <div className="flex items-center justify-center gap-2 mb-3">
+        <CheckCircle className="w-5 h-5 text-green-400" />
+        <h3 className="text-lg font-semibold text-white">Order Confirmed</h3>
+      </div>
+      <p className="text-white/50 text-sm mb-4">
+        Track your order in the dashboard
+      </p>
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigate("/dashboard")}
+        className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-green-500/50 text-white/90 text-sm rounded-lg transition-all"
+      >
+        <span>View Orders</span>
+        <ArrowRight className="w-3.5 h-3.5" />
+      </motion.button>
     </motion.div>
   );
 };
@@ -451,7 +467,20 @@ type ContractAddresses = {
   orderContract: `0x${string}` | undefined;
 };
 
-const Chatbot: React.FC = () => {
+interface ChatbotProps {
+  menuAction?: {
+    action: "add" | "update" | "delete";
+    itemName?: string;
+  } | null;
+  onMenuActionComplete?: () => void;
+  autoEnableAdminMode?: boolean;
+}
+
+const Chatbot: React.FC<ChatbotProps> = ({
+  menuAction,
+  onMenuActionComplete,
+  autoEnableAdminMode,
+}) => {
   // @ts-ignore
   const { role } = useAuthStore();
   const { address } = useAccount();
@@ -468,6 +497,8 @@ const Chatbot: React.FC = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [adminModeInitialized, setAdminModeInitialized] = useState(false);
   const [registrationStep, setRegistrationStep] = useState<string | null>(null);
+  const [menuActionStep, setMenuActionStep] = useState<string | null>(null);
+  const [currentItemName, setCurrentItemName] = useState<string | null>(null);
   const [merchantData, setMerchantData] = useState({
     wallet: "",
     items: [] as Array<{ name: string; price: string }>,
@@ -598,7 +629,13 @@ const Chatbot: React.FC = () => {
   }, [messages.length]);
 
   useEffect(() => {
-    if (role === "merchant" && isAdminMode && !adminModeInitialized) {
+    // Only trigger registration flow if admin mode is manually enabled (not from menu actions)
+    if (
+      role === "merchant" &&
+      isAdminMode &&
+      !adminModeInitialized &&
+      !menuActionStep
+    ) {
       setAdminModeInitialized(true);
       sendMessageToAPI("/admin on", false).then(() => {
         setRegistrationStep("wallet");
@@ -612,7 +649,59 @@ const Chatbot: React.FC = () => {
         ]);
       });
     }
-  }, [isAdminMode, role, adminModeInitialized]);
+  }, [isAdminMode, role, adminModeInitialized, menuActionStep]);
+
+  useEffect(() => {
+    if (autoEnableAdminMode && role === "merchant" && !isAdminMode) {
+      setIsAdminMode(true);
+
+      if (menuAction) {
+        setAdminModeInitialized(true);
+      }
+    }
+  }, [autoEnableAdminMode, role, menuAction]);
+
+  // Handle menu actions from MerchantMenu component
+  useEffect(() => {
+    if (menuAction && role === "merchant" && !registrationStep) {
+      const handleMenuAction = async () => {
+        // Clear messages to start fresh for menu action
+        setMessages([]);
+
+        setCurrentItemName(menuAction.itemName || null);
+        setMenuActionStep(menuAction.action);
+
+        // Send admin on command in the background first
+        await sendMessageToAPI("/admin on", false, false);
+
+        if (menuAction.action === "add") {
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                "Let's add a new menu item!\n\nPlease provide the item details in the format:\n**Item Name - $Price**\n\nFor example: Margherita Pizza - $12.99",
+            },
+          ]);
+        } else if (menuAction.action === "update" && menuAction.itemName) {
+          setMessages([
+            {
+              role: "assistant",
+              content: `Let's update the price for "${menuAction.itemName}".\n\nPlease provide the new price (e.g., 15.99):`,
+            },
+          ]);
+        } else if (menuAction.action === "delete" && menuAction.itemName) {
+          setMessages([
+            {
+              role: "assistant",
+              content: `Are you sure you want to delete "${menuAction.itemName}"?\n\nType "yes" to confirm or "no" to cancel.`,
+            },
+          ]);
+        }
+      };
+
+      handleMenuAction();
+    }
+  }, [menuAction, role]);
 
   const toggleAdminMode = () => {
     const newAdminMode = !isAdminMode;
@@ -620,6 +709,16 @@ const Chatbot: React.FC = () => {
 
     if (!newAdminMode) {
       setAdminModeInitialized(false);
+    }
+  };
+
+  const resetMenuActionState = () => {
+    setMenuActionStep(null);
+    setCurrentItemName(null);
+    setIsAdminMode(false);
+    setAdminModeInitialized(false);
+    if (onMenuActionComplete) {
+      onMenuActionComplete();
     }
   };
 
@@ -770,10 +869,139 @@ const Chatbot: React.FC = () => {
     adjustHeight(true);
     setAttachments([]);
 
-    if (role === "merchant" && isAdminMode && registrationStep) {
+    // Priority order: registration flow > menu action flow > regular chat
+    if (role === "merchant" && registrationStep && isAdminMode) {
+      // Only handle registration if admin mode is manually enabled
       await handleMerchantRegistration(userMessage);
+    } else if (role === "merchant" && menuActionStep && !registrationStep) {
+      // Only handle menu actions if NOT in registration flow
+      await handleMenuActionFlow(userMessage);
     } else {
       await sendMessageToAPI(userMessage, true);
+    }
+  };
+
+  const handleMenuActionFlow = async (userMessage: string) => {
+    // Show user's message
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+
+    switch (menuActionStep) {
+      case "add":
+        // Parse menu item (Item Name - $Price or Item Name: $Price)
+        const itemRegex = /(.+?)\s*[-:]\s*\$?(\d+(?:\.\d{2})?)/;
+        const match = userMessage.match(itemRegex);
+
+        if (match) {
+          const itemName = match[1].trim().replace(/^[-•*]\s*/, "");
+          const price = match[2];
+
+          // Send add_item command to API
+          await sendMessageToAPI(
+            `/add_item:${itemName}:${price}`,
+            false,
+            false
+          );
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `✅ Successfully added "${itemName}" for $${parseFloat(
+                price
+              ).toFixed(2)} to your menu!`,
+            },
+          ]);
+
+          // Reset menu action state
+          setTimeout(() => resetMenuActionState(), 1500);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                "I couldn't parse the menu item. Please use the format:\n**Item Name - $Price**\n\nFor example: Margherita Pizza - $12.99",
+            },
+          ]);
+        }
+        break;
+
+      case "update":
+        const priceMatch = userMessage.match(/\$?(\d+(?:\.\d{2})?)/);
+        const newPrice = priceMatch ? priceMatch[1] : userMessage;
+
+        if (currentItemName && !isNaN(parseFloat(newPrice))) {
+          // Send update_price command to API
+          await sendMessageToAPI(
+            `/update_price:${currentItemName}:${newPrice}`,
+            false,
+            false
+          );
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `✅ Successfully updated the price of "${currentItemName}" to $${parseFloat(
+                newPrice
+              ).toFixed(2)}!`,
+            },
+          ]);
+
+          // Reset menu action state
+          setTimeout(() => resetMenuActionState(), 1500);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "Please provide a valid price (e.g., 15.99 or $15.99).",
+            },
+          ]);
+        }
+        break;
+
+      case "delete":
+        if (userMessage.toLowerCase() === "yes" && currentItemName) {
+          // Send remove_item command to API
+          await sendMessageToAPI(
+            `/remove_item:${currentItemName}`,
+            false,
+            false
+          );
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `✅ Successfully deleted "${currentItemName}" from your menu!`,
+            },
+          ]);
+
+          // Reset menu action state
+          setTimeout(() => resetMenuActionState(), 1500);
+        } else if (userMessage.toLowerCase() === "no") {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "Deletion cancelled. Your menu item is safe!",
+            },
+          ]);
+
+          // Reset menu action state
+          setTimeout(() => resetMenuActionState(), 1500);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                'Please type "yes" to confirm deletion or "no" to cancel.',
+            },
+          ]);
+        }
+        break;
     }
   };
 
@@ -912,9 +1140,14 @@ const Chatbot: React.FC = () => {
           {
             role: "assistant",
             content:
-              "🎉 Congratulations! Your restaurant registration is complete!\n\nYour restaurant is now set up and ready to accept orders. You can continue chatting to:\n- Add item descriptions using: **Item Name - Description**\n- Update any information\n- Manage your restaurant",
+              "🎉 Congratulations! Your restaurant registration is complete!\n\nYour restaurant is now set up and ready to accept orders.",
           },
         ]);
+
+        // Reload page after 2 seconds to show the updated merchant menu
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
         break;
     }
   };
@@ -936,15 +1169,15 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="w-[60%] h-[70vh] backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] rounded-3xl border border-green-800/50 flex flex-col p-8 relative overflow-hidden">
+    <div className="w-full md:w-[85%] lg:w-[70%] xl:w-[60%] h-[80vh] md:h-[75vh] lg:h-[70vh] backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] rounded-2xl md:rounded-3xl border border-green-800/50 flex flex-col p-4 md:p-6 lg:p-8 relative overflow-hidden">
       {role === "merchant" && (
-        <div className="absolute top-6 right-6 z-20">
+        <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
           <motion.button
             onClick={toggleAdminMode}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all backdrop-blur-xl border",
+              "flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all backdrop-blur-xl border",
               isAdminMode
                 ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
                 : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
@@ -980,7 +1213,7 @@ const Chatbot: React.FC = () => {
                 transition={{ delay: 0.2, duration: 0.5 }}
                 className="inline-block"
               >
-                <h1 className="text-4xl font-semibold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white/90 to-white/40 pb-1">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white/90 to-white/40 pb-1">
                   How can I help today?
                 </h1>
                 <motion.div
@@ -1000,12 +1233,12 @@ const Chatbot: React.FC = () => {
               </motion.p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 px-2">
               {commandSuggestions.map((suggestion, index) => (
                 <motion.button
                   key={suggestion.prefix}
                   onClick={() => selectCommandSuggestion(index)}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg text-sm text-white/60 hover:text-white/90 transition-all relative group"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-3 md:py-2 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg text-xs md:text-sm text-white/60 hover:text-white/90 transition-all relative group"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -1059,7 +1292,7 @@ const Chatbot: React.FC = () => {
                 >
                   <div
                     className={cn(
-                      "max-w-[80%] px-4 py-3 text-sm relative prose prose-invert prose-sm",
+                      "max-w-[90%] md:max-w-[80%] px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm relative prose prose-invert prose-sm",
                       message.role === "user"
                         ? "bg-gradient-to-br from-green-700/30 to-green-800/40 text-white/90 rounded-2xl rounded-br-sm"
                         : "bg-gradient-to-br from-gray-800/80 to-gray-900/90 text-white/80 rounded-2xl rounded-bl-sm"
@@ -1115,7 +1348,7 @@ const Chatbot: React.FC = () => {
         )}
 
         <motion.div
-          className="relative backdrop-blur-2xl bg-white/[0.01] rounded-3xl border-1 border-green-900/54 shadow-2xl"
+          className="relative backdrop-blur-2xl bg-white/[0.01] rounded-2xl md:rounded-3xl border-1 border-green-900/54 shadow-2xl"
           initial={{ scale: 0.98 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.1 }}
@@ -1255,7 +1488,7 @@ const Chatbot: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   disabled={loading || !input.trim()}
                   className={cn(
-                    "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                    "px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all",
                     "flex items-center gap-2",
                     input.trim() && !loading
                       ? "bg-white text-[#0A0A0B] shadow-lg shadow-white/10"
