@@ -535,6 +535,7 @@ const AuthButton: React.FC = () => {
   const { openTxToast } = useNotification();
 
   const isDashboardPage = location.pathname === "/dashboard";
+  const isAdminPage = location.pathname === "/admin";
 
   const [contractAddrs, setContractAddrs] = useState<ContractAddresses>({
     a3a: undefined,
@@ -661,13 +662,14 @@ const AuthButton: React.FC = () => {
         address &&
         !storedToken &&
         !token &&
-        !showRoleSelector
+        !showRoleSelector &&
+        !isAdminPage
       ) {
         setShowRoleSelector(true);
       }
     };
     checkSession();
-  }, [address, token, isConnected, showRoleSelector, setAuth, clearAuth]);
+  }, [address, token, isConnected, showRoleSelector, setAuth, clearAuth, isAdminPage]);
 
   const extractNonce = (message: string): string => {
     // Extract nonce from message format: "Sign this message to log in to Fiducia. Domain:a2a.com Nonce: f3139d1717365ae8"

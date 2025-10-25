@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import './App.css';
 import CustomerDashboard from './pages/UserDashboard';
+import AdminPage from './pages/AdminPage';
 
 function App() {
     return (
@@ -11,6 +12,7 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/home" element={<Dashboard />} />
                 <Route path="/dashboard" element={<CustomerDashboard />} />
+                <Route path="/admin" element={<AdminPage />} />
             </Routes>
         </Router>
     );
