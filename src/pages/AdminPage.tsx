@@ -29,9 +29,19 @@ const AdminPage: React.FC = () => {
 
   const { isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({
     hash: txHash,
+    confirmations: 1,
   });
 
   const isAdmin = address?.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
+
+  React.useEffect(() => {
+    if (isTxConfirmed && txHash) {
+      setSuccess(true);
+      setApplicantAddress("");
+      setTxHash(undefined);
+      setTimeout(() => setSuccess(false), 3000);
+    }
+  }, [isTxConfirmed, txHash]);
 
   const handleApprove = async () => {
     if (!applicantAddress) {
@@ -61,10 +71,6 @@ const AdminPage: React.FC = () => {
       if (chainId) {
         openTxToast(chainId.toString(), hash);
       }
-
-      setSuccess(true);
-      setApplicantAddress("");
-      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       console.error("Failed to approve applicant:", err);
       setError(err.shortMessage || err.message || "Transaction failed");
