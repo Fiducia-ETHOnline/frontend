@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { erc20Abi, parseEther } from "viem";
 import MerchantNFTAbi from "@/abi/MerchantNFT.json";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
 const MERCHANT_NFT_ADDRESS =
@@ -530,8 +530,11 @@ const AuthButton: React.FC = () => {
   const [isApprovingA3A, setIsApprovingA3A] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { writeContractAsync } = useWriteContract();
   const { openTxToast } = useNotification();
+
+  const isDashboardPage = location.pathname === "/dashboard";
 
   const [contractAddrs, setContractAddrs] = useState<ContractAddresses>({
     a3a: undefined,
@@ -906,7 +909,7 @@ const AuthButton: React.FC = () => {
     <>
       <div className="flex items-center gap-2">
         <AnimatePresence>
-          {token && role && needsA3AApproval && (
+          {token && role && needsA3AApproval && !isDashboardPage && (
             <motion.button
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -930,7 +933,7 @@ const AuthButton: React.FC = () => {
           )}
         </AnimatePresence>
         <AnimatePresence>
-          {token && role && (
+          {token && role && !isDashboardPage && (
             <motion.button
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

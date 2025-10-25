@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
+import A3ALogo from "@/assets/A3A_logo.png";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
 
@@ -51,7 +52,11 @@ interface OrderDetails {
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const statusConfig: Record<
     string,
-    { variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode; label: string }
+    {
+      variant: "default" | "secondary" | "destructive" | "outline";
+      icon: React.ReactNode;
+      label: string;
+    }
   > = {
     AWAITING_FULFILLMENT: {
       variant: "outline",
@@ -83,7 +88,10 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const config = statusConfig[status] || statusConfig.AWAITING_FULFILLMENT;
 
   return (
-    <Badge variant={config.variant} className="flex items-center gap-1.5 px-3 py-1.5 text-white">
+    <Badge
+      variant={config.variant}
+      className="flex items-center gap-1.5 px-3 py-1.5 text-white"
+    >
       {config.icon}
       <span>{config.label}</span>
     </Badge>
@@ -163,14 +171,19 @@ const OrderRow: React.FC<{
 
   return (
     <>
-      <TableRow className="border-b border-white/10 hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => setShowDetails(!showDetails)}>
+      <TableRow
+        className="border-b border-white/10 hover:bg-white/[0.02] transition-colors cursor-pointer"
+        onClick={() => setShowDetails(!showDetails)}
+      >
         <TableCell className="py-5 first:pl-5 pl-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
               <ShoppingBag className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <p className="font-semibold text-white text-base">#{order.orderId}</p>
+              <p className="font-semibold text-white text-base">
+                #{order.orderId}
+              </p>
               {loadingDetails ? (
                 <div className="flex items-center gap-1 mt-0.5">
                   <Loader className="w-3 h-3 text-white/40 animate-spin" />
@@ -179,7 +192,8 @@ const OrderRow: React.FC<{
               ) : orderDetails ? (
                 <div className="flex items-center gap-2 mt-0.5">
                   <code className="text-white/50 text-xs font-mono bg-black/20 px-1.5 py-0.5 rounded">
-                    {orderDetails.wallet.slice(0, 6)}...{orderDetails.wallet.slice(-4)}
+                    {orderDetails.wallet.slice(0, 6)}...
+                    {orderDetails.wallet.slice(-4)}
                   </code>
                   <button
                     onClick={(e) => {
@@ -205,10 +219,15 @@ const OrderRow: React.FC<{
           {loadingDetails ? (
             <div className="flex items-center gap-2">
               <Loader className="w-4 h-4 text-white/40 animate-spin" />
-              <span className="text-white/50 text-sm">Loading description...</span>
+              <span className="text-white/50 text-sm">
+                Loading description...
+              </span>
             </div>
           ) : orderDetails ? (
-            <p className="text-white/80 text-sm max-w-md line-clamp-2" title={orderDetails.desc}>
+            <p
+              className="text-white/80 text-sm max-w-md line-clamp-2"
+              title={orderDetails.desc}
+            >
               {orderDetails.desc}
             </p>
           ) : (
@@ -249,7 +268,11 @@ const OrderRow: React.FC<{
               size="sm"
               className="text-white/60 hover:text-white h-8 w-8 p-0"
             >
-              {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              {showDetails ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
             </Button>
           </div>
         </TableCell>
@@ -259,7 +282,10 @@ const OrderRow: React.FC<{
       <AnimatePresence>
         {showDetails && (
           <TableRow>
-            <TableCell colSpan={5} className="p-0 border-b border-white/10 bg-white/[0.01]">
+            <TableCell
+              colSpan={5}
+              className="p-0 border-b border-white/10 bg-white/[0.01]"
+            >
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -295,8 +321,12 @@ const OrderRow: React.FC<{
                               <AlertTriangle className="w-5 h-5 text-red-400" />
                             </div>
                             <div>
-                              <h4 className="text-white font-semibold">Raise a Dispute</h4>
-                              <p className="text-white/50 text-xs">Describe the issue with your order</p>
+                              <h4 className="text-white font-semibold">
+                                Raise a Dispute
+                              </h4>
+                              <p className="text-white/50 text-xs">
+                                Describe the issue with your order
+                              </p>
                             </div>
                           </div>
                           <textarea
@@ -382,8 +412,12 @@ const OrderRow: React.FC<{
                           <AlertTriangle className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">Dispute in Progress</p>
-                          <p className="text-xs text-orange-200/60">Awaiting resolution from mediator</p>
+                          <p className="font-semibold text-sm">
+                            Dispute in Progress
+                          </p>
+                          <p className="text-xs text-orange-200/60">
+                            Awaiting resolution from mediator
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -396,8 +430,12 @@ const OrderRow: React.FC<{
                           <CheckCircle className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">Order Completed</p>
-                          <p className="text-xs text-green-200/60">Transaction successful and funds released</p>
+                          <p className="font-semibold text-sm">
+                            Order Completed
+                          </p>
+                          <p className="text-xs text-green-200/60">
+                            Transaction successful and funds released
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -476,7 +514,7 @@ const CustomerDashboard: React.FC = () => {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
         }
       );
@@ -511,7 +549,7 @@ const CustomerDashboard: React.FC = () => {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ reason }),
         }
@@ -548,42 +586,58 @@ const CustomerDashboard: React.FC = () => {
 
       {/* Header */}
       <header className="flex justify-between items-center px-8 py-6 relative z-10">
-        <div className="bg-[#0B1410] py-3 px-6 rounded-4xl flex items-center gap-5">
-          {isHome ? (
-            <HoverBorderGradient
-              containerClassName="rounded-full"
-              as="button"
-              className="bg-[#1A2620] text-white flex items-center space-x-2"
-              onClick={() => navigate("/home")}
-            >
-              <span>Home</span>
-            </HoverBorderGradient>
-          ) : (
-            <span
-              className="text-white/60 hover:text-white cursor-pointer transition-colors px-4 py-2"
-              onClick={() => navigate("/home")}
-            >
-              Home
-            </span>
-          )}
+        <div className="flex gap-3 items-center">
+          {" "}
+          <img
+            src={A3ALogo}
+            alt="A3A Logo"
+            className="w-12 h-12 rounded-full"
+          />
+          <div className="bg-[#0B1410] py-3 px-6 rounded-4xl flex items-center gap-5">
+            {isHome ? (
+              <HoverBorderGradient
+                containerClassName="rounded-full"
+                as="button"
+                className="bg-[#1A2620] text-white flex items-center space-x-2"
+                onClick={() => navigate("/home")}
+              >
+                <span>Home</span>
+              </HoverBorderGradient>
+            ) : (
+              <span
+                className="text-white/60 hover:text-white cursor-pointer transition-colors px-4 py-2"
+                onClick={() => navigate("/home")}
+              >
+                Home
+              </span>
+            )}
 
-          {!isHome ? (
-            <HoverBorderGradient
-              containerClassName="rounded-full"
-              as="button"
-              className="bg-[#1A2620] text-white flex items-center space-x-2"
-              onClick={() => navigate("/dashboard")}
-            >
-              <span>{role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard` : "Dashboard"}</span>
-            </HoverBorderGradient>
-          ) : (
-            <span
-              className="text-white/60 hover:text-white cursor-pointer transition-colors px-4 py-2"
-              onClick={() => navigate("/dashboard")}
-            >
-              {role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard` : "Dashboard"}
-            </span>
-          )}
+            {!isHome ? (
+              <HoverBorderGradient
+                containerClassName="rounded-full"
+                as="button"
+                className="bg-[#1A2620] text-white flex items-center space-x-2"
+                onClick={() => navigate("/dashboard")}
+              >
+                <span>
+                  {role
+                    ? `${
+                        role.charAt(0).toUpperCase() + role.slice(1)
+                      } Dashboard`
+                    : "Dashboard"}
+                </span>
+              </HoverBorderGradient>
+            ) : (
+              <span
+                className="text-white/60 hover:text-white cursor-pointer transition-colors px-4 py-2"
+                onClick={() => navigate("/dashboard")}
+              >
+                {role
+                  ? `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard`
+                  : "Dashboard"}
+              </span>
+            )}
+          </div>
         </div>
         <div className="auth-area">
           <AuthButton />
@@ -598,7 +652,9 @@ const CustomerDashboard: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-semibold text-white mb-2">My Orders</h1>
+              <h1 className="text-4xl font-semibold text-white mb-2">
+                My Orders
+              </h1>
               <p className="text-white/60">Track and manage your orders</p>
             </div>
             <Button
@@ -649,19 +705,33 @@ const CustomerDashboard: React.FC = () => {
             className="backdrop-blur-xl bg-white/[0.02] rounded-2xl border border-green-800/30 p-12 text-center"
           >
             <ShoppingBag className="w-16 h-16 text-white/20 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No orders yet</h3>
-            <p className="text-white/60">Your orders will appear here once you make a purchase.</p>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              No orders yet
+            </h3>
+            <p className="text-white/60">
+              Your orders will appear here once you make a purchase.
+            </p>
           </motion.div>
         ) : (
           <div className="backdrop-blur-xl bg-white/[0.02] rounded-2xl border border-white/10 overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/60 first:pl-5 pl-0 font-semibold">Order ID & Merchant</TableHead>
-                  <TableHead className="text-white/60 font-semibold">Description</TableHead>
-                  <TableHead className="text-white/60 font-semibold">Amount</TableHead>
-                  <TableHead className="text-white/60 font-semibold">Status</TableHead>
-                  <TableHead className="text-white/60 font-semibold">Actions</TableHead>
+                  <TableHead className="text-white/60 first:pl-5 pl-0 font-semibold">
+                    Order ID & Merchant
+                  </TableHead>
+                  <TableHead className="text-white/60 font-semibold">
+                    Description
+                  </TableHead>
+                  <TableHead className="text-white/60 font-semibold">
+                    Amount
+                  </TableHead>
+                  <TableHead className="text-white/60 font-semibold">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-white/60 font-semibold">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
