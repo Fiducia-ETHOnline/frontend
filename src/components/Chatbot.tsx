@@ -1169,15 +1169,15 @@ const Chatbot: React.FC<ChatbotProps> = ({
   };
 
   return (
-    <div className="w-[60%] h-[70vh] backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] rounded-3xl border border-green-800/50 flex flex-col p-8 relative overflow-hidden">
+    <div className="w-full md:w-[85%] lg:w-[70%] xl:w-[60%] h-[80vh] md:h-[75vh] lg:h-[70vh] backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] rounded-2xl md:rounded-3xl border border-green-800/50 flex flex-col p-4 md:p-6 lg:p-8 relative overflow-hidden">
       {role === "merchant" && (
-        <div className="absolute top-6 right-6 z-20">
+        <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
           <motion.button
             onClick={toggleAdminMode}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all backdrop-blur-xl border",
+              "flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all backdrop-blur-xl border",
               isAdminMode
                 ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
                 : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
@@ -1213,7 +1213,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
                 transition={{ delay: 0.2, duration: 0.5 }}
                 className="inline-block"
               >
-                <h1 className="text-4xl font-semibold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white/90 to-white/40 pb-1">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white/90 to-white/40 pb-1">
                   How can I help today?
                 </h1>
                 <motion.div
@@ -1233,12 +1233,12 @@ const Chatbot: React.FC<ChatbotProps> = ({
               </motion.p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 px-2">
               {commandSuggestions.map((suggestion, index) => (
                 <motion.button
                   key={suggestion.prefix}
                   onClick={() => selectCommandSuggestion(index)}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg text-sm text-white/60 hover:text-white/90 transition-all relative group"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-3 md:py-2 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg text-xs md:text-sm text-white/60 hover:text-white/90 transition-all relative group"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -1292,7 +1292,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
                 >
                   <div
                     className={cn(
-                      "max-w-[80%] px-4 py-3 text-sm relative prose prose-invert prose-sm",
+                      "max-w-[90%] md:max-w-[80%] px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm relative prose prose-invert prose-sm",
                       message.role === "user"
                         ? "bg-gradient-to-br from-green-700/30 to-green-800/40 text-white/90 rounded-2xl rounded-br-sm"
                         : "bg-gradient-to-br from-gray-800/80 to-gray-900/90 text-white/80 rounded-2xl rounded-bl-sm"
@@ -1348,7 +1348,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
         )}
 
         <motion.div
-          className="relative backdrop-blur-2xl bg-white/[0.01] rounded-3xl border-1 border-green-900/54 shadow-2xl"
+          className="relative backdrop-blur-2xl bg-white/[0.01] rounded-2xl md:rounded-3xl border-1 border-green-900/54 shadow-2xl"
           initial={{ scale: 0.98 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.1 }}
@@ -1488,7 +1488,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
                   whileTap={{ scale: 0.98 }}
                   disabled={loading || !input.trim()}
                   className={cn(
-                    "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                    "px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all",
                     "flex items-center gap-2",
                     input.trim() && !loading
                       ? "bg-white text-[#0A0A0B] shadow-lg shadow-white/10"

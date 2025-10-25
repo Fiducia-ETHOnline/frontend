@@ -28,18 +28,7 @@
     gap: 12px;
 }
 
-.auth-area button {
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: 500;
-    transition: background-color 0.2s, color 0.2s;
-}
 
-.auth-area button:hover {
-    background-color: #e6e7e8;
-    border-color: #c5c9cd;
-}
 
 .main-content {
     flex-grow: 1;

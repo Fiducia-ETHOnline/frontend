@@ -879,15 +879,15 @@ const CustomerDashboard: React.FC = () => {
       </div>
 
       {/* Header */}
-      <header className="flex justify-between items-center px-8 py-6 relative z-10">
-        <div className="flex gap-3 items-center">
+      <header className="flex justify-between items-center px-4 md:px-6 lg:px-8 py-4 md:py-6 relative z-10">
+        <div className="flex gap-2 md:gap-3 items-center">
           {" "}
           <img
             src={A3ALogo}
             alt="A3A Logo"
-            className="w-12 h-12 rounded-full"
+            className="w-10 h-10 md:w-12 md:h-12 rounded-full"
           />
-          <div className="bg-[#0B1410] py-3 px-6 rounded-4xl flex items-center gap-5">
+          <div className="bg-[#0B1410] py-2 px-3 md:py-3 md:px-6 rounded-4xl flex items-center gap-3 md:gap-5">
             {isHome ? (
               <HoverBorderGradient
                 containerClassName="rounded-full"
@@ -899,7 +899,7 @@ const CustomerDashboard: React.FC = () => {
               </HoverBorderGradient>
             ) : (
               <span
-                className="text-white/60 hover:text-white cursor-pointer transition-colors px-4 py-2"
+                className="text-white/60 hover:text-white cursor-pointer transition-colors px-2 py-1 md:px-4 md:py-2 text-xs md:text-base"
                 onClick={() => navigate("/home")}
               >
                 Home
@@ -910,10 +910,10 @@ const CustomerDashboard: React.FC = () => {
               <HoverBorderGradient
                 containerClassName="rounded-full"
                 as="button"
-                className="bg-[#1A2620] text-white flex items-center space-x-2"
+                className="bg-[#1A2620] text-white flex items-center space-x-2 text-xs md:text-base"
                 onClick={() => navigate("/dashboard")}
               >
-                <span>
+                <span className="whitespace-nowrap">
                   {role
                     ? `${
                         role.charAt(0).toUpperCase() + role.slice(1)
@@ -923,7 +923,7 @@ const CustomerDashboard: React.FC = () => {
               </HoverBorderGradient>
             ) : (
               <span
-                className="text-white/60 hover:text-white cursor-pointer transition-colors px-4 py-2"
+                className="text-white/60 hover:text-white cursor-pointer transition-colors px-2 py-1 md:px-4 md:py-2 text-xs md:text-base whitespace-nowrap"
                 onClick={() => navigate("/dashboard")}
               >
                 {role
@@ -938,18 +938,18 @@ const CustomerDashboard: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-8 py-8 overflow-auto">
+      <main className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 overflow-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 md:mb-8"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-semibold text-white mb-2">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-white mb-2">
                 {role === "merchant" ? "Merchant Orders" : "My Orders"}
               </h1>
-              <p className="text-white/60">
+              <p className="text-sm md:text-base text-white/60">
                 {role === "merchant"
                   ? "View funds and orders from customers"
                   : "Track and manage your orders"}
@@ -958,9 +958,9 @@ const CustomerDashboard: React.FC = () => {
             <Button
               onClick={handleViewAllTransactions}
               variant="outline"
-              className="gap-2 border-white/20 hover:bg-white/5"
+              className="gap-2 border-white/20 hover:bg-white/5 text-xs md:text-sm whitespace-nowrap"
             >
-              <History className="w-4 h-4" />
+              <History className="w-3 h-3 md:w-4 md:h-4" />
               View All Transactions
             </Button>
           </div>
@@ -971,7 +971,7 @@ const CustomerDashboard: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6"
+            className="mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
           >
             {/* Total Revenue Card */}
             <Card className="bg-white/[0.02] border-white/10">
@@ -1108,7 +1108,8 @@ const CustomerDashboard: React.FC = () => {
           </motion.div>
         ) : (
           <div className="backdrop-blur-xl bg-white/[0.02] rounded-2xl border border-white/10 overflow-hidden">
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow className="border-b border-white/10 hover:bg-transparent">
                   <TableHead className="text-white/60 first:pl-5 pl-0 font-semibold">
@@ -1145,6 +1146,7 @@ const CustomerDashboard: React.FC = () => {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
       </main>
