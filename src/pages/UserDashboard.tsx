@@ -14,11 +14,19 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  TrendingUp,
+  DollarSign,
 } from "lucide-react";
 import DarkVeil from "@/components/DarkVeil";
 import AuthButton from "@/components/AuthButton";
 import { useTransactionPopup } from "@blockscout/app-sdk";
-import { useAccount } from "wagmi";
+import {
+  useAccount,
+  useReadContract,
+  useWatchContractEvent,
+  useConfig,
+} from "wagmi";
+import { readContract } from "wagmi/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
@@ -30,17 +38,38 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
 import A3ALogo from "@/assets/A3A_logo.png";
+import OrderContractAbi from "@/abi/OrderContract.json";
+import { formatEther } from "viem";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
+const ORDER_CONTRACT_ADDRESS =
+  "0x1417178178d35E5638c30B4070eB4F4ccC0aEaD0" as const;
 
 interface Order {
   orderId: string;
   cid: string;
   status: string;
   amount: string;
+  buyer?: string;
+  seller?: string;
+  price?: string;
+  timestamp?: number;
 }
 
 interface OrderDetails {
@@ -103,7 +132,8 @@ const OrderRow: React.FC<{
   onConfirm: (orderId: string) => void;
   onDispute: (orderId: string, reason: string) => void;
   isLoading: boolean;
-}> = ({ order, onConfirm, onDispute, isLoading }) => {
+  isMerchant?: boolean;
+}> = ({ order, onConfirm, onDispute, isLoading, isMerchant = false }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
@@ -184,7 +214,34 @@ const OrderRow: React.FC<{
               <p className="font-semibold text-white text-base">
                 #{order.orderId}
               </p>
-              {loadingDetails ? (
+              {isMerchant ? (
+                // For merchant: show buyer address
+                order.buyer ? (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <code className="text-white/50 text-xs font-mono bg-black/20 px-1.5 py-0.5 rounded">
+                      {order.buyer.slice(0, 6)}...
+                      {order.buyer.slice(-4)}
+                    </code>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(order.buyer!);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="text-white/40 hover:text-white/80 transition-colors p-0.5 hover:bg-white/10 rounded"
+                      title="Copy buyer address"
+                    >
+                      {copied ? (
+                        <Check className="w-3 h-3 text-green-400" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                ) : null
+              ) : // For customer: show merchant address from orderDetails
+              loadingDetails ? (
                 <div className="flex items-center gap-1 mt-0.5">
                   <Loader className="w-3 h-3 text-white/40 animate-spin" />
                   <span className="text-white/40 text-xs">Loading...</span>
@@ -216,7 +273,23 @@ const OrderRow: React.FC<{
         </TableCell>
 
         <TableCell className="py-5">
-          {loadingDetails ? (
+          {isMerchant ? (
+            // For merchant: show timestamp
+            order.timestamp ? (
+              <p className="text-white/80 text-sm">
+                {new Date(order.timestamp * 1000).toLocaleString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            ) : (
+              <p className="text-white/50 text-sm">N/A</p>
+            )
+          ) : // For customer: show description
+          loadingDetails ? (
             <div className="flex items-center gap-2">
               <Loader className="w-4 h-4 text-white/40 animate-spin" />
               <span className="text-white/50 text-sm">
@@ -245,37 +318,40 @@ const OrderRow: React.FC<{
           <StatusBadge status={order.status} />
         </TableCell>
 
-        <TableCell className="py-5">
-          <div className="flex items-center gap-1">
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleViewTransactions();
-              }}
-              variant="ghost"
-              size="sm"
-              title="View transaction history"
-              className="text-white/60 hover:text-white h-8 w-8 p-0"
-            >
-              <History className="w-4 h-4" />
-            </Button>
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDetails(!showDetails);
-              }}
-              variant="ghost"
-              size="sm"
-              className="text-white/60 hover:text-white h-8 w-8 p-0"
-            >
-              {showDetails ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        </TableCell>
+        {/* Actions column - only for customers */}
+        {!isMerchant && (
+          <TableCell className="py-5">
+            <div className="flex items-center gap-1">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewTransactions();
+                }}
+                variant="ghost"
+                size="sm"
+                title="View transaction history"
+                className="text-white/60 hover:text-white h-8 w-8 p-0"
+              >
+                <History className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetails(!showDetails);
+                }}
+                variant="ghost"
+                size="sm"
+                className="text-white/60 hover:text-white h-8 w-8 p-0"
+              >
+                {showDetails ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </TableCell>
+        )}
       </TableRow>
 
       {/* Expanded Details Row */}
@@ -371,8 +447,8 @@ const OrderRow: React.FC<{
                     )}
                   </AnimatePresence>
 
-                  {/* Action Buttons */}
-                  {canTakeAction && !showDisputeForm && (
+                  {/* Action Buttons - Only for customers */}
+                  {!isMerchant && canTakeAction && !showDisputeForm && (
                     <div className="flex gap-4">
                       <Button
                         onClick={() => onConfirm(order.orderId)}
@@ -450,28 +526,232 @@ const OrderRow: React.FC<{
   );
 };
 
+interface FinalizedOrder {
+  orderId: string;
+  amount: string;
+  timestamp: number;
+}
+
 const CustomerDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [totalRevenue, setTotalRevenue] = useState<number>(0);
+  const [revenueData, setRevenueData] = useState<
+    Array<{ date: string; revenue: number }>
+  >([]);
+  const [finalizedOrders, setFinalizedOrders] = useState<FinalizedOrder[]>([]);
   const { openPopup } = useTransactionPopup();
   const { address } = useAccount();
   const { token, role } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/home";
+  const config = useConfig();
 
-  const fetchOrders = async () => {
-    if (!token) {
-      setError("Please sign in to view your orders.");
+  // Merchant: Get order IDs from contract
+  const { data: merchantOrderIds, refetch: refetchMerchantOrders } =
+    useReadContract({
+      address: ORDER_CONTRACT_ADDRESS,
+      abi: OrderContractAbi,
+      functionName: "getOrderIDsByMerchant",
+      args: [address!],
+      query: {
+        enabled: role === "merchant" && !!address,
+      },
+    });
+  console.log(merchantOrderIds);
+
+  // Watch for orderFinalized events for merchants
+  useWatchContractEvent({
+    address: ORDER_CONTRACT_ADDRESS,
+    abi: OrderContractAbi,
+    eventName: "orderFinalized",
+    onLogs(logs: any[]) {
+      console.log("Order finalized event:", logs);
+      if (role === "merchant") {
+        // Process finalized orders from event logs to update revenue
+        const newFinalizedOrders: FinalizedOrder[] = [];
+        logs.forEach((log: any) => {
+          const offerId = log.args?.offerId?.toString();
+          if (offerId) {
+            newFinalizedOrders.push({
+              orderId: offerId,
+              amount: "0", // Will be updated from contract
+              timestamp: Date.now(),
+            });
+          }
+        });
+
+        if (newFinalizedOrders.length > 0) {
+          setFinalizedOrders((prev) => [...prev, ...newFinalizedOrders]);
+        }
+
+        refetchMerchantOrders();
+      }
+    },
+  });
+
+  const fetchMerchantOrders = async () => {
+    if (!merchantOrderIds || merchantOrderIds.length === 0 || !address) {
+      setOrders([]);
       setLoading(false);
       return;
     }
 
-    if (role !== "customer") {
-      setError("This page is only accessible to customers.");
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch order details from contract using offers function for each order ID
+      const orderPromises = (merchantOrderIds as bigint[]).map(
+        async (orderId) => {
+          try {
+            // Call the offers function from the contract to get order details
+            const offerData = (await readContract(config, {
+              address: ORDER_CONTRACT_ADDRESS,
+              abi: OrderContractAbi,
+              functionName: "offers",
+              args: [orderId],
+            })) as any;
+
+            console.log(`Offer data for order ${orderId}:`, offerData);
+
+            // Access the named fields from the offer struct
+            const buyer = offerData.buyer || offerData[0];
+            const seller = offerData.seller || offerData[1];
+            const price = offerData.price || offerData[4];
+            const paid = offerData.paid || offerData[5];
+            const timestamp = offerData.timestamp || offerData[6];
+            const statusEnum = offerData.status ?? offerData[7];
+
+            // Map contract status enum to string
+            const statusMap = [
+              "AWAITING_FULFILLMENT",
+              "CONFIRMED",
+              "DELIVERING",
+              "COMPLETED",
+              "DISPUTED",
+            ];
+            const status = statusMap[statusEnum] || "AWAITING_FULFILLMENT";
+
+            // Fetch CID from API for description
+            let cid = "";
+            try {
+              const apiResponse = await fetch(
+                `${API_BASE_URL}/orders/merchant/${orderId.toString()}`,
+                {
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+              if (apiResponse.ok) {
+                const apiData = await apiResponse.json();
+                cid = apiData.cid || "";
+              }
+            } catch (err) {
+              console.error(`Failed to fetch CID for order ${orderId}:`, err);
+            }
+
+            // For merchant orders, multiply the amount by 10^12
+            const amountValue = paid || 0n;
+            const multipliedAmount = amountValue * BigInt(1e12);
+
+            return {
+              orderId: orderId.toString(),
+              cid: cid,
+              status: status,
+              amount: formatEther(multipliedAmount) + " PyUSD",
+              buyer,
+              seller,
+              price: formatEther(price || 0n),
+              timestamp: timestamp ? Number(timestamp) : Date.now(),
+            };
+          } catch (err) {
+            console.error(
+              `Failed to fetch offer details for order ${orderId}:`,
+              err
+            );
+            return null;
+          }
+        }
+      );
+
+      const fetchedOrders = (await Promise.all(orderPromises)).filter(
+        (o) => o !== null
+      ) as Order[];
+      console.log("Fetched merchant orders from contract:", fetchedOrders);
+      setOrders(fetchedOrders);
+
+      // Calculate revenue from completed orders only
+      const completed = fetchedOrders.filter((o) => o.status === "COMPLETED");
+      const total = completed.reduce((sum, order) => {
+        const amount = parseFloat(order.amount.replace(/[^0-9.]/g, ""));
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+      setTotalRevenue(total);
+
+      // Generate revenue growth data (last 7 days) based on actual timestamps
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      // Initialize chart data for last 7 days
+      const chartData = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(today);
+        date.setDate(date.getDate() - (6 - i));
+        return {
+          date: date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+          revenue: 0,
+          timestamp: date.getTime(),
+        };
+      });
+
+      // Map completed orders to their actual dates based on timestamp
+      completed.forEach((order) => {
+        if (!order.timestamp) return;
+
+        const orderDate = new Date(order.timestamp * 1000);
+        const orderDateOnly = new Date(
+          orderDate.getFullYear(),
+          orderDate.getMonth(),
+          orderDate.getDate()
+        );
+        const orderTimestamp = orderDateOnly.getTime();
+
+        // Find the matching day in chartData
+        const dayIndex = chartData.findIndex(
+          (day) => day.timestamp === orderTimestamp
+        );
+
+        if (dayIndex !== -1) {
+          const amount = parseFloat(order.amount.replace(/[^0-9.]/g, ""));
+          if (!isNaN(amount)) {
+            chartData[dayIndex].revenue += amount;
+          }
+        }
+      });
+
+      // Remove the timestamp property before setting state (only needed for calculation)
+      const finalChartData = chartData.map(({ date, revenue }) => ({
+        date,
+        revenue,
+      }));
+      setRevenueData(finalChartData);
+    } catch (err) {
+      console.error("Failed to fetch merchant orders:", err);
+      setError("Failed to load orders. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCustomerOrders = async () => {
+    if (!token) {
+      setError("Please sign in to view your orders.");
       setLoading(false);
       return;
     }
@@ -497,8 +777,12 @@ const CustomerDashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, [token, role]);
+    if (role === "merchant") {
+      fetchMerchantOrders();
+    } else {
+      fetchCustomerOrders();
+    }
+  }, [token, role, merchantOrderIds]);
 
   const handleConfirmOrder = async (orderId: string) => {
     if (!token) return;
@@ -524,7 +808,12 @@ const CustomerDashboard: React.FC = () => {
       const data = await response.json();
       setSuccessMessage(data.message || "Order confirmed successfully!");
 
-      await fetchOrders();
+      // Refetch orders based on role
+      if (role === "merchant") {
+        await fetchMerchantOrders();
+      } else {
+        await fetchCustomerOrders();
+      }
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
       console.error("Failed to confirm order:", err);
@@ -560,7 +849,12 @@ const CustomerDashboard: React.FC = () => {
       const data = await response.json();
       setSuccessMessage(data.message || "Dispute raised successfully!");
 
-      await fetchOrders();
+      // Refetch orders based on role
+      if (role === "merchant") {
+        await fetchMerchantOrders();
+      } else {
+        await fetchCustomerOrders();
+      }
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
       console.error("Failed to raise dispute:", err);
@@ -653,9 +947,13 @@ const CustomerDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-semibold text-white mb-2">
-                My Orders
+                {role === "merchant" ? "Merchant Orders" : "My Orders"}
               </h1>
-              <p className="text-white/60">Track and manage your orders</p>
+              <p className="text-white/60">
+                {role === "merchant"
+                  ? "View funds and orders from customers"
+                  : "Track and manage your orders"}
+              </p>
             </div>
             <Button
               onClick={handleViewAllTransactions}
@@ -667,6 +965,100 @@ const CustomerDashboard: React.FC = () => {
             </Button>
           </div>
         </motion.div>
+
+        {/* Merchant Revenue Stats - Only show when there are orders */}
+        {role === "merchant" && orders.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            {/* Total Revenue Card */}
+            <Card className="bg-white/[0.02] border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-green-400" />
+                  Total Revenue
+                </CardTitle>
+                <CardDescription className="text-white/60">
+                  Completed orders only
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                  ${totalRevenue.toFixed(2)}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Revenue Growth Chart */}
+            <Card className="bg-white/[0.02] border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                  Revenue Growth
+                </CardTitle>
+                <CardDescription className="text-white/60">
+                  Last 7 days
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    revenue: {
+                      label: "Revenue",
+                      color: "hsl(142.1 76.2% 36.3%)",
+                    },
+                  }}
+                  className="h-[150px] w-full"
+                >
+                  <AreaChart data={revenueData}>
+                    <defs>
+                      <linearGradient
+                        id="fillRevenue"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="hsl(142.1 76.2% 36.3%)"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="hsl(142.1 76.2% 36.3%)"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.1)"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                      tickLine={{ stroke: "rgba(255,255,255,0.2)" }}
+                    />
+                    <YAxis
+                      tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                      tickLine={{ stroke: "rgba(255,255,255,0.2)" }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="hsl(142.1 76.2% 36.3%)"
+                      fill="url(#fillRevenue)"
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <AnimatePresence>
           {successMessage && (
@@ -709,7 +1101,9 @@ const CustomerDashboard: React.FC = () => {
               No orders yet
             </h3>
             <p className="text-white/60">
-              Your orders will appear here once you make a purchase.
+              {role === "merchant"
+                ? "Orders from customers will appear here."
+                : "Your orders will appear here once you make a purchase."}
             </p>
           </motion.div>
         ) : (
@@ -718,10 +1112,12 @@ const CustomerDashboard: React.FC = () => {
               <TableHeader>
                 <TableRow className="border-b border-white/10 hover:bg-transparent">
                   <TableHead className="text-white/60 first:pl-5 pl-0 font-semibold">
-                    Order ID & Merchant
+                    {role === "merchant"
+                      ? "Order ID & Customer"
+                      : "Order ID & Merchant"}
                   </TableHead>
                   <TableHead className="text-white/60 font-semibold">
-                    Description
+                    {role === "merchant" ? "Timestamp" : "Description"}
                   </TableHead>
                   <TableHead className="text-white/60 font-semibold">
                     Amount
@@ -729,9 +1125,11 @@ const CustomerDashboard: React.FC = () => {
                   <TableHead className="text-white/60 font-semibold">
                     Status
                   </TableHead>
-                  <TableHead className="text-white/60 font-semibold">
-                    Actions
-                  </TableHead>
+                  {role !== "merchant" && (
+                    <TableHead className="text-white/60 font-semibold">
+                      Actions
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -742,6 +1140,7 @@ const CustomerDashboard: React.FC = () => {
                     onConfirm={handleConfirmOrder}
                     onDispute={handleDispute}
                     isLoading={actionLoading}
+                    isMerchant={role === "merchant"}
                   />
                 ))}
               </TableBody>

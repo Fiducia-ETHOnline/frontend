@@ -38,7 +38,13 @@ function Dashboard() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        setHasProfile(!!response.data);
+        const profileData = response.data;
+        const isProfileComplete = profileData &&
+          profileData.wallet &&
+          profileData.description &&
+          profileData.location;
+
+        setHasProfile(isProfileComplete);
       } catch (err: any) {
         if (err.response?.status === 404) {
           setHasProfile(false);
@@ -73,7 +79,14 @@ function Dashboard() {
           `${API_BASE_URL}/merchant/${merchantId}/profile`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setHasProfile(!!response.data);
+
+        const profileData = response.data;
+        const isProfileComplete = profileData &&
+          profileData.wallet &&
+          profileData.description &&
+          profileData.location;
+
+        setHasProfile(isProfileComplete);
       } catch (err: any) {
         console.error("Failed to refresh merchant profile:", err);
       }
@@ -157,7 +170,7 @@ function Dashboard() {
           <Chatbot
             menuAction={menuAction}
             onMenuActionComplete={handleMenuActionComplete}
-            autoEnableAdminMode={!!menuAction}
+            autoEnableAdminMode={!!menuAction || (role === "merchant" && !hasProfile)}
           />
         )}
       </main>

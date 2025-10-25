@@ -16,6 +16,7 @@ import {
   Zap,
   Shield,
   Settings,
+  ArrowRight,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { erc20Abi, parseEther } from "viem";
+import { useNavigate } from "react-router-dom";
 
 const MaxUint256: bigint = 2n ** 256n - 1n;
 
@@ -431,16 +433,30 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
 };
 
 const OrderStatusPlaceholder: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-4 w-full backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] rounded-3xl border border-green-800/50 p-8 text-center"
+      className="mt-4 w-full backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] rounded-3xl border border-green-800/50 p-6 text-center"
     >
-      <h3 className="text-xl font-semibold text-white mb-2">
-        Current Order Status
-      </h3>
-      <p className="text-white/60">Waiting for status update...</p>
+      <div className="flex items-center justify-center gap-2 mb-3">
+        <CheckCircle className="w-5 h-5 text-green-400" />
+        <h3 className="text-lg font-semibold text-white">Order Confirmed</h3>
+      </div>
+      <p className="text-white/50 text-sm mb-4">
+        Track your order in the dashboard
+      </p>
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigate("/dashboard")}
+        className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-green-500/50 text-white/90 text-sm rounded-lg transition-all"
+      >
+        <span>View Orders</span>
+        <ArrowRight className="w-3.5 h-3.5" />
+      </motion.button>
     </motion.div>
   );
 };
@@ -460,7 +476,11 @@ interface ChatbotProps {
   autoEnableAdminMode?: boolean;
 }
 
-const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, autoEnableAdminMode }) => {
+const Chatbot: React.FC<ChatbotProps> = ({
+  menuAction,
+  onMenuActionComplete,
+  autoEnableAdminMode,
+}) => {
   // @ts-ignore
   const { role } = useAuthStore();
   const { address } = useAccount();
@@ -610,7 +630,12 @@ const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, aut
 
   useEffect(() => {
     // Only trigger registration flow if admin mode is manually enabled (not from menu actions)
-    if (role === "merchant" && isAdminMode && !adminModeInitialized && !autoEnableAdminMode && !menuActionStep) {
+    if (
+      role === "merchant" &&
+      isAdminMode &&
+      !adminModeInitialized &&
+      !menuActionStep
+    ) {
       setAdminModeInitialized(true);
       sendMessageToAPI("/admin on", false).then(() => {
         setRegistrationStep("wallet");
@@ -624,15 +649,17 @@ const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, aut
         ]);
       });
     }
-  }, [isAdminMode, role, adminModeInitialized, autoEnableAdminMode, menuActionStep]);
+  }, [isAdminMode, role, adminModeInitialized, menuActionStep]);
 
-  // Auto-enable admin mode when prop is set (from menu actions)
   useEffect(() => {
     if (autoEnableAdminMode && role === "merchant" && !isAdminMode) {
       setIsAdminMode(true);
-      setAdminModeInitialized(true); // Mark as initialized to prevent registration flow
+
+      if (menuAction) {
+        setAdminModeInitialized(true);
+      }
     }
-  }, [autoEnableAdminMode, role]);
+  }, [autoEnableAdminMode, role, menuAction]);
 
   // Handle menu actions from MerchantMenu component
   useEffect(() => {
@@ -869,13 +896,19 @@ const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, aut
           const price = match[2];
 
           // Send add_item command to API
-          await sendMessageToAPI(`/add_item:${itemName}:${price}`, false, false);
+          await sendMessageToAPI(
+            `/add_item:${itemName}:${price}`,
+            false,
+            false
+          );
 
           setMessages((prev) => [
             ...prev,
             {
               role: "assistant",
-              content: `✅ Successfully added "${itemName}" for $${parseFloat(price).toFixed(2)} to your menu!`,
+              content: `✅ Successfully added "${itemName}" for $${parseFloat(
+                price
+              ).toFixed(2)} to your menu!`,
             },
           ]);
 
@@ -909,7 +942,9 @@ const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, aut
             ...prev,
             {
               role: "assistant",
-              content: `✅ Successfully updated the price of "${currentItemName}" to $${parseFloat(newPrice).toFixed(2)}!`,
+              content: `✅ Successfully updated the price of "${currentItemName}" to $${parseFloat(
+                newPrice
+              ).toFixed(2)}!`,
             },
           ]);
 
@@ -920,8 +955,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, aut
             ...prev,
             {
               role: "assistant",
-              content:
-                "Please provide a valid price (e.g., 15.99 or $15.99).",
+              content: "Please provide a valid price (e.g., 15.99 or $15.99).",
             },
           ]);
         }
@@ -930,7 +964,11 @@ const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, aut
       case "delete":
         if (userMessage.toLowerCase() === "yes" && currentItemName) {
           // Send remove_item command to API
-          await sendMessageToAPI(`/remove_item:${currentItemName}`, false, false);
+          await sendMessageToAPI(
+            `/remove_item:${currentItemName}`,
+            false,
+            false
+          );
 
           setMessages((prev) => [
             ...prev,
@@ -958,7 +996,8 @@ const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, aut
             ...prev,
             {
               role: "assistant",
-              content: 'Please type "yes" to confirm deletion or "no" to cancel.',
+              content:
+                'Please type "yes" to confirm deletion or "no" to cancel.',
             },
           ]);
         }
@@ -1101,9 +1140,14 @@ const Chatbot: React.FC<ChatbotProps> = ({ menuAction, onMenuActionComplete, aut
           {
             role: "assistant",
             content:
-              "🎉 Congratulations! Your restaurant registration is complete!\n\nYour restaurant is now set up and ready to accept orders. You can continue chatting to:\n- Add item descriptions using: **Item Name - Description**\n- Update any information\n- Manage your restaurant",
+              "🎉 Congratulations! Your restaurant registration is complete!\n\nYour restaurant is now set up and ready to accept orders.",
           },
         ]);
+
+        // Reload page after 2 seconds to show the updated merchant menu
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
         break;
     }
   };
