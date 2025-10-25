@@ -541,7 +541,8 @@ const CustomerDashboard: React.FC = () => {
   const [totalRevenue, setTotalRevenue] = useState<number>(0);
   const [revenueData, setRevenueData] = useState<
     Array<{ date: string; revenue: number }>
-  >([]);
+    >([]);
+  // @ts-ignore
   const [finalizedOrders, setFinalizedOrders] = useState<FinalizedOrder[]>([]);
   const { openPopup } = useTransactionPopup();
   const { address } = useAccount();
@@ -595,7 +596,7 @@ const CustomerDashboard: React.FC = () => {
   });
 
   const fetchMerchantOrders = async () => {
-    if (!merchantOrderIds || merchantOrderIds.length === 0 || !address) {
+    if (!merchantOrderIds || (Array.isArray(merchantOrderIds) && merchantOrderIds.length === 0) || !address) {
       setOrders([]);
       setLoading(false);
       return;

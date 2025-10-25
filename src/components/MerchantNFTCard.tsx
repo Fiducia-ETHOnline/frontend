@@ -26,6 +26,7 @@ const MerchantNFTCard: React.FC = () => {
     abi: MerchantNFTAbi,
     functionName: "getNextId",
     query: {
+      // @ts-ignore
       enabled: !!address && nftBalance && Number(nftBalance) > 0,
     },
   });

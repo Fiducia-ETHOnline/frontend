@@ -499,6 +499,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   const [registrationStep, setRegistrationStep] = useState<string | null>(null);
   const [menuActionStep, setMenuActionStep] = useState<string | null>(null);
   const [currentItemName, setCurrentItemName] = useState<string | null>(null);
+  // @ts-ignore
   const [merchantData, setMerchantData] = useState({
     wallet: "",
     items: [] as Array<{ name: string; price: string }>,
