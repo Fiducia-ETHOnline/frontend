@@ -987,29 +987,33 @@ const AuthButton: React.FC = () => {
         {/* Desktop: All Buttons Inline */}
         <div className="hidden md:flex items-center gap-2">
           <AnimatePresence>
-            {token && role && needsA3AApproval && !isDashboardPage && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                onClick={handleApproveA3A}
-                disabled={isApprovingA3A || !contractAddrs.orderContract}
-                className="px-4 py-1.5 rounded-full backdrop-blur-xl backdrop-saturate-[180%] border border-green-800/50 text-white/90 text-sm font-medium transition-all hover:border-green-700/60 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                title="Approve A3A tokens for the Order Contract"
-              >
-                {isApprovingA3A ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Approving...</span>
-                  </>
-                ) : (
-                  <span>Approve A3A</span>
-                )}
-              </motion.button>
-            )}
+            {isConnected &&
+              token &&
+              role &&
+              needsA3AApproval &&
+              !isDashboardPage && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  onClick={handleApproveA3A}
+                  disabled={isApprovingA3A || !contractAddrs.orderContract}
+                  className="px-4 py-1.5 rounded-full backdrop-blur-xl backdrop-saturate-[180%] border border-green-800/50 text-white/90 text-sm font-medium transition-all hover:border-green-700/60 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  title="Approve A3A tokens for the Order Contract"
+                >
+                  {isApprovingA3A ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Approving...</span>
+                    </>
+                  ) : (
+                    <span>Approve A3A</span>
+                  )}
+                </motion.button>
+              )}
           </AnimatePresence>
           <AnimatePresence>
-            {token && role && !isDashboardPage && (
+            {isConnected && token && role && !isDashboardPage && (
               <motion.button
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1065,45 +1069,47 @@ const AuthButton: React.FC = () => {
           </AnimatePresence>
 
           <AnimatePresence>
-            {token && (contractAddrs.a3a || contractAddrs.pyusd) && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="px-4 py-1.5 rounded-full backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] border border-green-800/50 text-white/90 text-sm font-medium flex items-center gap-2"
-                title={`Balances for ${address}`}
-              >
-                {isBalanceLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <Wallet className="w-3.5 h-3.5 text-green-400/70 flex-shrink-0" />
-                    <div className="flex items-center gap-2 divide-x divide-gray-600/50">
-                      {a3aBalance && (
-                        <div className="flex items-baseline gap-1 pr-2">
-                          <span>
-                            {parseFloat(a3aBalance.formatted).toFixed(2)}
-                          </span>
-                          <span className="text-white/50 text-xs">
-                            {a3aBalance.symbol}
-                          </span>
-                        </div>
-                      )}
-                      {pyusdBalance && (
-                        <div className="flex items-baseline gap-1 pr-2 last:pr-0">
-                          <span>
-                            {parseFloat(pyusdBalance.formatted).toFixed(2)}
-                          </span>
-                          <span className="text-white/50 text-xs">
-                            {pyusdBalance.symbol}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </motion.div>
-            )}
+            {isConnected &&
+              token &&
+              (contractAddrs.a3a || contractAddrs.pyusd) && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="px-4 py-1.5 rounded-full backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.40)] border border-green-800/50 text-white/90 text-sm font-medium flex items-center gap-2"
+                  title={`Balances for ${address}`}
+                >
+                  {isBalanceLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <Wallet className="w-3.5 h-3.5 text-green-400/70 flex-shrink-0" />
+                      <div className="flex items-center gap-2 divide-x divide-gray-600/50">
+                        {a3aBalance && (
+                          <div className="flex items-baseline gap-1 pr-2">
+                            <span>
+                              {parseFloat(a3aBalance.formatted).toFixed(2)}
+                            </span>
+                            <span className="text-white/50 text-xs">
+                              {a3aBalance.symbol}
+                            </span>
+                          </div>
+                        )}
+                        {pyusdBalance && (
+                          <div className="flex items-baseline gap-1 pr-2 last:pr-0">
+                            <span>
+                              {parseFloat(pyusdBalance.formatted).toFixed(2)}
+                            </span>
+                            <span className="text-white/50 text-xs">
+                              {pyusdBalance.symbol}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              )}
           </AnimatePresence>
         </div>
 
@@ -1120,64 +1126,72 @@ const AuthButton: React.FC = () => {
             className="md:hidden absolute top-full right-0 mt-2 w-64 backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.95)] rounded-2xl border border-green-800/50 shadow-2xl z-50 overflow-hidden"
           >
             <div className="p-2 space-y-1">
-              {token && (contractAddrs.a3a || contractAddrs.pyusd) && (
-                <div className="px-4 py-3 bg-white/5 rounded-lg mb-2">
-                  {isBalanceLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin mx-auto text-green-400" />
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Wallet className="w-4 h-4 text-green-400/70" />
-                        <span className="text-white/60 text-xs">Balances</span>
-                      </div>
-                      <div className="space-y-1">
-                        {a3aBalance && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/50">
-                              {a3aBalance.symbol}
-                            </span>
-                            <span className="text-white">
-                              {parseFloat(a3aBalance.formatted).toFixed(2)}
-                            </span>
-                          </div>
-                        )}
-                        {pyusdBalance && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/50">
-                              {pyusdBalance.symbol}
-                            </span>
-                            <span className="text-white">
-                              {parseFloat(pyusdBalance.formatted).toFixed(2)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
+              {isConnected &&
+                token &&
+                (contractAddrs.a3a || contractAddrs.pyusd) && (
+                  <div className="px-4 py-3 bg-white/5 rounded-lg mb-2">
+                    {isBalanceLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin mx-auto text-green-400" />
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Wallet className="w-4 h-4 text-green-400/70" />
+                          <span className="text-white/60 text-xs">
+                            Balances
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          {a3aBalance && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/50">
+                                {a3aBalance.symbol}
+                              </span>
+                              <span className="text-white">
+                                {parseFloat(a3aBalance.formatted).toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                          {pyusdBalance && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/50">
+                                {pyusdBalance.symbol}
+                              </span>
+                              <span className="text-white">
+                                {parseFloat(pyusdBalance.formatted).toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
 
-              {token && role && needsA3AApproval && !isDashboardPage && (
-                <button
-                  onClick={() => {
-                    handleApproveA3A();
-                    setShowMobileMenu(false);
-                  }}
-                  disabled={isApprovingA3A || !contractAddrs.orderContract}
-                  className="w-full px-4 py-3 text-left rounded-lg hover:bg-white/5 transition-colors flex items-center gap-3 disabled:opacity-50"
-                >
-                  {isApprovingA3A ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-green-400" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 text-green-400" />
-                  )}
-                  <span className="text-white text-sm">
-                    {isApprovingA3A ? "Approving..." : "Approve A3A"}
-                  </span>
-                </button>
-              )}
+              {isConnected &&
+                token &&
+                role &&
+                needsA3AApproval &&
+                !isDashboardPage && (
+                  <button
+                    onClick={() => {
+                      handleApproveA3A();
+                      setShowMobileMenu(false);
+                    }}
+                    disabled={isApprovingA3A || !contractAddrs.orderContract}
+                    className="w-full px-4 py-3 text-left rounded-lg hover:bg-white/5 transition-colors flex items-center gap-3 disabled:opacity-50"
+                  >
+                    {isApprovingA3A ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-green-400" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-green-400" />
+                    )}
+                    <span className="text-white text-sm">
+                      {isApprovingA3A ? "Approving..." : "Approve A3A"}
+                    </span>
+                  </button>
+                )}
 
-              {token && role && !isDashboardPage && (
+              {isConnected && token && role && !isDashboardPage && (
                 <button
                   onClick={() => {
                     setShowBuyModal(true);
@@ -1234,14 +1248,14 @@ const AuthButton: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
             onClick={(e) => {
               if (e.target === e.currentTarget && !loading) {
                 setShowRoleSelector(false);
               }
             }}
           >
-            <div className="absolute top-6 right-6 z-[60]">
+            <div className="absolute top-6 right-6 z-[100000]">
               <ConnectKitButton />
             </div>
 
