@@ -811,6 +811,12 @@ const CustomerDashboard: React.FC = () => {
     }
   }, [token, role, merchantOrderIds, orderContractAddress]);
 
+useEffect(() => {
+    if (!address) {
+      navigate("/home");
+    }
+  }, [address, navigate]);
+
   const handleConfirmOrder = async (orderId: string) => {
     if (!token) return;
 
