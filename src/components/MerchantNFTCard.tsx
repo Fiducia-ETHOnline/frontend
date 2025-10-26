@@ -5,7 +5,7 @@ import { Shield, ExternalLink, Award } from "lucide-react";
 import MerchantNFTAbi from "@/abi/MerchantNFT.json";
 import merchantLogo from "@/assets/A3A_logo.png";
 
-const MERCHANT_NFT_ADDRESS = "0xe2d8c380db7d124D03DACcA07645Fea659De9738" as const;
+const MERCHANT_NFT_ADDRESS = "0x1e08cFBd659436F8Fc72C91A9302B6C6F444c0A2" as const;
 const BLOCKSCOUT_BASE_URL = "https://eth-sepolia.blockscout.com";
 
 const MerchantNFTCard: React.FC = () => {

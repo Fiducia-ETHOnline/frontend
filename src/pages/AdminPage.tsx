@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 const ADMIN_ADDRESS = "0xcf19f5d480390A638f3c6986323892Bc1D08125e";
 const MERCHANT_NFT_ADDRESS =
-  "0xe2d8c380db7d124D03DACcA07645Fea659De9738" as const;
+  "0x1e08cFBd659436F8Fc72C91A9302B6C6F444c0A2" as const;
 
 const AdminPage: React.FC = () => {
   const { address, chainId } = useAccount();
