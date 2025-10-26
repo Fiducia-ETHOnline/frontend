@@ -62,7 +62,7 @@ function LandingPage() {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.5] mb-8 md:mb-12"
           >
             <Circle className="h-2 w-2 fill-rose-500/80" />
-            <span className="text-sm text-white/80 tracking-wide" onClick={() => navigate('/dashboard')}>Fiducia</span>
+            <span className="text-sm text-white/80 tracking-wide" onClick={() => navigate('/home')}>Fiducia</span>
           </motion.div>
 
           <motion.div
