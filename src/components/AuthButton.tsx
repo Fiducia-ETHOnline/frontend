@@ -708,7 +708,9 @@ const AuthButton: React.FC = () => {
       // If address matches and we have credentials, auto sign-in (don't show role selector)
       if (isMatchingAddress && storedTok && storedRol && !token) {
         console.log("Auto-signing in for matching address:", address);
-        // Auth store already has the data from localStorage via persist middleware
+        const storedMerchantId = storedAuthState?.merchantId;
+        // Restore the session to the auth store
+        setAuth(storedTok, address, storedRol, storedMerchantId);
         return;
       }
 
