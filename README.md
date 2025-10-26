@@ -1,73 +1,104 @@
-# React + TypeScript + Vite
+# Fiducia Agents - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository contains the frontend application for the Fiducia Agents platform, allowing users to interact with AI agents for decentralized commerce using Web3 technologies.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The Fiducia Frontend provides a user-friendly interface for:
 
-## React Compiler
+- Connecting Web3 wallets (via ConnectKit).
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+- Authenticating with the backend using a Sign-In-with-Ethereum-like flow.
 
-## Expanding the ESLint configuration
+- Interacting with an AI chatbot to place orders or perform other actions.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Approving token spending caps for smart contracts.Confirming and paying for orders by signing transactions provided by the backend agent.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Viewing token balances and transaction statuses, enhanced with Blockscout integration.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+This project is built with a modern frontend stack:
+
+- Framework: React
+
+- Build Tool: Vite
+
+- Web3 Integration:
+
+  - wagmi: Core hooks for interacting with Ethereum (connecting wallets, reading/writing contracts, signing messages, sending transactions).
+
+  - viem: Underlying library used by wagmi for blockchain interactions.
+
+  - connectkit: UI component library for easy wallet connection.
+
+- State Management: Zustand
+
+- API Communication: Axios
+
+- UI & Styling:
+
+  - Tailwind CSS: Utility-first CSS framework.
+
+  - Framer Motion: Animations and transitions.
+
+  - Lucide React: Icon library.
+
+  - react-markdown: Rendering markdown content from the chatbot.
+
+- Blockchain Interaction Feedback: Blockscout SDK (for fetching and displaying transaction details/status).
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or later recommended)
+
+- pnpm (or npm/yarn) package manager
+
+- A configured Web3 wallet like MetaMask connected to the appropriate network (e.g., Sepolia testnet or a local Anvil instance proxied via Nginx).
+
+### Installation
+
+Clone the repository:
+
+```
+git clone <your-frontend-repo-url>
+cd <your-frontend-repo-directory>
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Install dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+pnpm install
+# or npm install / yarn install
+```
+
+Set up environment variables:
+
+Create a .env file in the project root and add the necessary variables. Refer to .env.example for the required keys (e.g., VITE_WALLETCONNECT_PROJECT_ID, VITE_API_BASE_URL, VITE_SEPOLIA_RPC_URL).VITE_WALLETCONNECT_PROJECT_ID=YOUR_PROJECT_ID
+
+Running the Development Server
+
+```
+pnpm dev
+# or npm run dev / yarn dev
+```
+
+This will start the Vite development server, typically available at http://localhost:5173.
+
+## Key Features
+
+- Wallet Connection: Smooth integration with various wallets via ConnectKit.
+
+- Secure Authentication: Signature-based login linked to the user's wallet address.
+
+- AI Chat Interface: Conversational UI for interacting with Consumer/Merchant agents.
+
+- Token Approval Flow: Standard ERC20 approve mechanism for granting spending permission to the OrderContract.
+
+- Order Confirmation & Payment: Securely sign and send pre-built transaction data received from the backend agent.
+
+- Real-time Balance Display: Uses wagmi to show user balances for relevant tokens (PYUSD, A3A).
+
+- On-Chain Status Tracking: Leverages the Blockscout SDK to provide users with transparent, real-time feedback on their transaction status directly from the blockchain explorer.
