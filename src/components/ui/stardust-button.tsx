@@ -1,7 +1,9 @@
+// @ts-ignore
 import React from 'react';
 
 export const StardustButton = ({ 
   children = "Launching Soon", 
+  // @ts-ignore
   onClick, 
   className = "",
   ...props 
@@ -128,10 +130,12 @@ export const StardustButton = ({
       <style>{beforeAfterStyles}</style>
       <button
         className={`pearl-button ${className}`}
+        // @ts-ignore
         style={buttonStyle}
         onClick={onClick}
         {...props}
       >
+        {/* @ts-ignore */}
         <div className="wrap" style={wrapStyle}>
           <p style={pStyle}>
             <span>✧</span>

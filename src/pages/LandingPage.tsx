@@ -1,6 +1,6 @@
 import Beams from "../components/Beams";
 import { motion } from "framer-motion";
-import { Circle, Github, Twitter, Linkedin, Mail } from "lucide-react";
+import { Circle, Github,  } from "lucide-react";
 import { cn } from "../lib/utils";
 import {useNavigate} from "react-router-dom";
 import { Features } from "../components/blocks/features-8";

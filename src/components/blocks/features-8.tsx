@@ -2,10 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Shield,
   Users,
-  Network,
   Coins,
-  Brain,
-  MessageSquare,
 } from "lucide-react";
 
 export function Features() {
