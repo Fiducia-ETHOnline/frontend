@@ -787,7 +787,6 @@ const Chatbot: React.FC<ChatbotProps> = ({
     setError(null);
 
     try {
-      const token = localStorage.getItem("fiducia_jwt");
       if (!token) {
         setError("Please sign in to start a conversation.");
         setLoading(false);
