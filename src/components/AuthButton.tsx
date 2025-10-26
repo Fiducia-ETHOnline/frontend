@@ -1429,19 +1429,6 @@ const AuthButton: React.FC = () => {
               className="backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.95)] rounded-3xl border border-green-800/50 p-8 max-w-md w-full shadow-2xl"
             >
               <div className="text-center py-8">
-                <motion.div
-                  animate={{
-                    rotate: 360,
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  className="mb-6"
-                >
-                  <Shield className="w-16 h-16 text-emerald-400 mx-auto" />
-                </motion.div>
                 <h2 className="text-2xl font-bold text-white mb-2">
                   Waiting for Approval
                 </h2>
