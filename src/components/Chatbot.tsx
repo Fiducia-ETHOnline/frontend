@@ -365,7 +365,7 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
             <button
               onClick={handleApprove}
               disabled={approveState !== "needed"}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all bg-blue-500 text-white hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all bg-white/10 text-white hover:bg-white/15 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {approveState === "approving" && !isApproveConfirming && (
                 <>
@@ -401,7 +401,7 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({
                 isPayConfirming ||
                 payState === "paying"
               }
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-500 text-black hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all bg-green-700/40 text-green-200 hover:bg-green-700/50 border border-green-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {payState === "paying" && !isPayConfirming && (
                 <>
@@ -638,7 +638,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
       !menuActionStep
     ) {
       setAdminModeInitialized(true);
-      sendMessageToAPI("/admin on", false).then(() => {
+      sendMessageToAPI("/admin on", false, false).then(() => {
         setRegistrationStep("wallet");
         setMessages((prev) => [
           ...prev,

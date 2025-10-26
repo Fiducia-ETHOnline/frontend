@@ -1,439 +1,541 @@
 [
   {
+    "type": "constructor",
     "inputs": [
       {
-        "internalType": "address",
         "name": "agentControllerAddress",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       },
-      { "internalType": "address", "name": "pyUSDAddress", "type": "address" },
       {
-        "internalType": "address",
+        "name": "pyUSDAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "a3aTokenAddress",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       },
-      { "internalType": "address", "name": "owner", "type": "address" }
+      { "name": "owner", "type": "address", "internalType": "address" }
     ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [],
-    "name": "OrderContract__CannotProposeOrderAnswerInCurrentState",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__ERC20TransferFailed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__EnoughTimeHasNotPassed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__NotOrderByMerchanProvided",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__OrderCannotBeCanceledInCurrentState",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__OrderCannotBeConfirmedInCurrentState",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__OrderCannotBeFinalizedInCurrentState",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__notAgentController",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__onlyOwnerCanWithdrawFunds",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OrderContract__userHasNoAccessToOffer",
-    "type": "error"
-  },
-  { "inputs": [], "name": "ReentrancyGuardReentrantCall", "type": "error" },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint64",
-        "name": "offerId",
-        "type": "uint64"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "amountPaid",
-        "type": "uint256"
-      }
-    ],
-    "name": "OrderConfirmed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint64",
-        "name": "offerId",
-        "type": "uint64"
-      },
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "promptHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "OrderProposed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint64",
-        "name": "offerId",
-        "type": "uint64"
-      }
-    ],
-    "name": "orderFinalized",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "PyUsdAmount", "type": "uint256" }
-    ],
+    "type": "function",
     "name": "buyA3AToken",
+    "inputs": [
+      { "name": "PyUsdAmount", "type": "uint256", "internalType": "uint256" }
+    ],
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
-    "name": "cancelOrder",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "confirmOrder",
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "finalizeOrder",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "getA3ATokenAddress",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "getAgentController",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "getAgentFee",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "pure",
-    "type": "function"
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "pure"
   },
   {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "getAmountPaid",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "getAnswerHash",
-    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "merchant", "type": "address" },
-      { "internalType": "uint64", "name": "orderId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "getMerchantOrderDetails",
+    "inputs": [
+      { "name": "merchant", "type": "address", "internalType": "address" },
+      { "name": "orderId", "type": "uint64", "internalType": "uint64" }
+    ],
     "outputs": [
       {
-        "components": [
-          { "internalType": "address", "name": "buyer", "type": "address" },
-          { "internalType": "address", "name": "seller", "type": "address" },
-          {
-            "internalType": "bytes32",
-            "name": "promptHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "answerHash",
-            "type": "bytes32"
-          },
-          { "internalType": "uint256", "name": "price", "type": "uint256" },
-          { "internalType": "uint256", "name": "paid", "type": "uint256" },
-          { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
-          {
-            "internalType": "enum OrderContract.OrderStatus",
-            "name": "status",
-            "type": "uint8"
-          }
-        ],
-        "internalType": "struct OrderContract.Offer",
         "name": "",
-        "type": "tuple"
+        "type": "tuple",
+        "internalType": "struct OrderContract.Offer",
+        "components": [
+          { "name": "buyer", "type": "address", "internalType": "address" },
+          { "name": "seller", "type": "address", "internalType": "address" },
+          {
+            "name": "promptHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "answerHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          { "name": "price", "type": "uint256", "internalType": "uint256" },
+          { "name": "paid", "type": "uint256", "internalType": "uint256" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "enum OrderContract.OrderStatus"
+          }
+        ]
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "getOfferIdToTimestamp",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "getOfferStatus",
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
     "outputs": [
       {
-        "internalType": "enum OrderContract.OrderStatus",
         "name": "",
-        "type": "uint8"
+        "type": "uint8",
+        "internalType": "enum OrderContract.OrderStatus"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "merchant", "type": "address" }
-    ],
+    "type": "function",
     "name": "getOrderIDsByMerchant",
-    "outputs": [{ "internalType": "uint64[]", "name": "", "type": "uint64[]" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [
+      { "name": "merchant", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint64[]", "internalType": "uint64[]" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "getOwner",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
-    "name": "getPromptHash",
-    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPromptHash",
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getPyUSDAddress",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "getUserByOfferId",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "user", "type": "address" },
-      { "internalType": "uint64", "name": "orderId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "getUserOrderDetails",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "orderId", "type": "uint64", "internalType": "uint64" }
+    ],
     "outputs": [
       {
-        "components": [
-          { "internalType": "address", "name": "buyer", "type": "address" },
-          { "internalType": "address", "name": "seller", "type": "address" },
-          {
-            "internalType": "bytes32",
-            "name": "promptHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "answerHash",
-            "type": "bytes32"
-          },
-          { "internalType": "uint256", "name": "price", "type": "uint256" },
-          { "internalType": "uint256", "name": "paid", "type": "uint256" },
-          { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
-          {
-            "internalType": "enum OrderContract.OrderStatus",
-            "name": "status",
-            "type": "uint8"
-          }
-        ],
+        "name": "",
+        "type": "tuple",
         "internalType": "struct OrderContract.Offer",
-        "name": "",
-        "type": "tuple"
+        "components": [
+          { "name": "buyer", "type": "address", "internalType": "address" },
+          { "name": "seller", "type": "address", "internalType": "address" },
+          {
+            "name": "promptHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "answerHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          { "name": "price", "type": "uint256", "internalType": "uint256" },
+          { "name": "paid", "type": "uint256", "internalType": "uint256" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "enum OrderContract.OrderStatus"
+          }
+        ]
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "user", "type": "address" }
-    ],
+    "type": "function",
     "name": "getUserOrderIds",
-    "outputs": [{ "internalType": "uint64[]", "name": "", "type": "uint64[]" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint64[]", "internalType": "uint64[]" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "user", "type": "address" },
-      { "internalType": "uint64", "name": "orderId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "getUserOrderStatus",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "orderId", "type": "uint64", "internalType": "uint64" }
+    ],
     "outputs": [
       {
-        "internalType": "enum OrderContract.OrderStatus",
         "name": "",
-        "type": "uint8"
+        "type": "uint8",
+        "internalType": "enum OrderContract.OrderStatus"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "user", "type": "address" },
-      { "internalType": "uint64", "name": "orderId", "type": "uint64" }
-    ],
+    "type": "function",
     "name": "hasUserOrder",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "orderId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+    "stateMutability": "view"
   },
   {
-    "inputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "type": "function",
     "name": "offers",
+    "inputs": [{ "name": "", "type": "uint64", "internalType": "uint64" }],
     "outputs": [
-      { "internalType": "address", "name": "buyer", "type": "address" },
-      { "internalType": "address", "name": "seller", "type": "address" },
-      { "internalType": "bytes32", "name": "promptHash", "type": "bytes32" },
-      { "internalType": "bytes32", "name": "answerHash", "type": "bytes32" },
-      { "internalType": "uint256", "name": "price", "type": "uint256" },
-      { "internalType": "uint256", "name": "paid", "type": "uint256" },
-      { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+      { "name": "buyer", "type": "address", "internalType": "address" },
+      { "name": "seller", "type": "address", "internalType": "address" },
+      { "name": "promptHash", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "answerHash", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "price", "type": "uint256", "internalType": "uint256" },
+      { "name": "paid", "type": "uint256", "internalType": "uint256" },
+      { "name": "timestamp", "type": "uint256", "internalType": "uint256" },
       {
-        "internalType": "enum OrderContract.OrderStatus",
         "name": "status",
-        "type": "uint8"
+        "type": "uint8",
+        "internalType": "enum OrderContract.OrderStatus"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "ownerCancelOrder",
     "inputs": [
-      { "internalType": "bytes32", "name": "promptHash", "type": "bytes32" },
-      {
-        "internalType": "address",
-        "name": "userWalletAddress",
-        "type": "address"
-      }
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
     ],
-    "name": "proposeOrder",
-    "outputs": [
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "bytes32", "name": "answerHash", "type": "bytes32" },
-      { "internalType": "uint64", "name": "offerId", "type": "uint64" },
-      { "internalType": "uint256", "name": "priceForOffer", "type": "uint256" },
-      { "internalType": "address", "name": "seller", "type": "address" }
-    ],
-    "name": "proposeOrderAnswer",
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ownerFinalizeOrder",
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "proposeOrder",
+    "inputs": [
+      { "name": "promptHash", "type": "bytes32", "internalType": "bytes32" },
+      {
+        "name": "userWalletAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "proposeOrderAnswer",
+    "inputs": [
+      { "name": "answerHash", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" },
+      {
+        "name": "priceForOffer",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      { "name": "seller", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "raiseDispute",
+    "inputs": [
+      { "name": "offerId", "type": "uint64", "internalType": "uint64" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "OrderCancelled",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "offerId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OrderConfirmed",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "offerId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "amountPaid",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OrderDisputed",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "offerId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OrderProposed",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "offerId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "promptHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OrderProposedAnswer",
+    "inputs": [
+      {
+        "name": "agent",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "offerId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "answerHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "orderFinalized",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "offerId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__CannotProposeOrderAnswerInCurrentState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__ERC20TransferFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__EnoughTimeHasNotPassed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__NotOrderByMerchanProvided",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__OrderCannotBeCanceledInCurrentState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__OrderCannotBeConfirmedInCurrentState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__OrderCannotBeDisputedInCurrentState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__OrderCannotBeFinalizedInCurrentState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__notAgentController",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__onlyOwnerCanWithdrawFunds",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderContract__userHasNoAccessToOffer",
+    "inputs": []
+  },
+  { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] }
 ]

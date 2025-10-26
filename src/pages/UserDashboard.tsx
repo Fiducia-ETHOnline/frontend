@@ -58,8 +58,6 @@ import { formatEther } from "viem";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
-const ORDER_CONTRACT_ADDRESS =
-  "0x1417178178d35E5638c30B4070eB4F4ccC0aEaD0" as const;
 
 interface Order {
   orderId: string;
@@ -541,9 +539,12 @@ const CustomerDashboard: React.FC = () => {
   const [totalRevenue, setTotalRevenue] = useState<number>(0);
   const [revenueData, setRevenueData] = useState<
     Array<{ date: string; revenue: number }>
-    >([]);
+  >([]);
   // @ts-ignore
   const [finalizedOrders, setFinalizedOrders] = useState<FinalizedOrder[]>([]);
+  const [orderContractAddress, setOrderContractAddress] = useState<
+    `0x${string}` | null
+  >(null);
   const { openPopup } = useTransactionPopup();
   const { address } = useAccount();
   const { token, role } = useAuthStore();
@@ -552,24 +553,26 @@ const CustomerDashboard: React.FC = () => {
   const isHome = location.pathname === "/home";
   const config = useConfig();
 
+  console.log(orderContractAddress);
   // Merchant: Get order IDs from contract
   const { data: merchantOrderIds, refetch: refetchMerchantOrders } =
     useReadContract({
-      address: ORDER_CONTRACT_ADDRESS,
+      address: orderContractAddress!,
       abi: OrderContractAbi,
       functionName: "getOrderIDsByMerchant",
       args: [address!],
       query: {
-        enabled: role === "merchant" && !!address,
+        enabled: role === "merchant" && !!address && !!orderContractAddress,
       },
     });
   console.log(merchantOrderIds);
 
   // Watch for orderFinalized events for merchants
   useWatchContractEvent({
-    address: ORDER_CONTRACT_ADDRESS,
+    address: orderContractAddress!,
     abi: OrderContractAbi,
     eventName: "orderFinalized",
+    enabled: !!orderContractAddress,
     onLogs(logs: any[]) {
       console.log("Order finalized event:", logs);
       if (role === "merchant") {
@@ -596,7 +599,12 @@ const CustomerDashboard: React.FC = () => {
   });
 
   const fetchMerchantOrders = async () => {
-    if (!merchantOrderIds || (Array.isArray(merchantOrderIds) && merchantOrderIds.length === 0) || !address) {
+    if (
+      !merchantOrderIds ||
+      (Array.isArray(merchantOrderIds) && merchantOrderIds.length === 0) ||
+      !address ||
+      !orderContractAddress
+    ) {
       setOrders([]);
       setLoading(false);
       return;
@@ -612,7 +620,7 @@ const CustomerDashboard: React.FC = () => {
           try {
             // Call the offers function from the contract to get order details
             const offerData = (await readContract(config, {
-              address: ORDER_CONTRACT_ADDRESS,
+              address: orderContractAddress!,
               abi: OrderContractAbi,
               functionName: "offers",
               args: [orderId],
@@ -777,13 +785,31 @@ const CustomerDashboard: React.FC = () => {
     }
   };
 
+  // Fetch order contract address on mount
+  useEffect(() => {
+    const fetchContractAddress = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/contract/order`);
+        if (!response.ok) throw new Error("Failed to fetch contract address");
+        const data = await response.json();
+        setOrderContractAddress(data as `0x${string}`);
+        console.log("Fetched order contract address:", data.address);
+      } catch (err) {
+        console.error("Failed to fetch contract address:", err);
+        setError("Failed to load contract address. Please refresh the page.");
+      }
+    };
+
+    fetchContractAddress();
+  }, []);
+
   useEffect(() => {
     if (role === "merchant") {
       fetchMerchantOrders();
     } else {
       fetchCustomerOrders();
     }
-  }, [token, role, merchantOrderIds]);
+  }, [token, role, merchantOrderIds, orderContractAddress]);
 
   const handleConfirmOrder = async (orderId: string) => {
     if (!token) return;
@@ -1111,42 +1137,42 @@ const CustomerDashboard: React.FC = () => {
           <div className="backdrop-blur-xl bg-white/[0.02] rounded-2xl border border-white/10 overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
-              <TableHeader>
-                <TableRow className="border-b border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/60 first:pl-5 pl-0 font-semibold">
-                    {role === "merchant"
-                      ? "Order ID & Customer"
-                      : "Order ID & Merchant"}
-                  </TableHead>
-                  <TableHead className="text-white/60 font-semibold">
-                    {role === "merchant" ? "Timestamp" : "Description"}
-                  </TableHead>
-                  <TableHead className="text-white/60 font-semibold">
-                    Amount
-                  </TableHead>
-                  <TableHead className="text-white/60 font-semibold">
-                    Status
-                  </TableHead>
-                  {role !== "merchant" && (
-                    <TableHead className="text-white/60 font-semibold">
-                      Actions
+                <TableHeader>
+                  <TableRow className="border-b border-white/10 hover:bg-transparent">
+                    <TableHead className="text-white/60 first:pl-5 pl-0 font-semibold">
+                      {role === "merchant"
+                        ? "Order ID & Customer"
+                        : "Order ID & Merchant"}
                     </TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((order) => (
-                  <OrderRow
-                    key={order.orderId}
-                    order={order}
-                    onConfirm={handleConfirmOrder}
-                    onDispute={handleDispute}
-                    isLoading={actionLoading}
-                    isMerchant={role === "merchant"}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+                    <TableHead className="text-white/60 font-semibold">
+                      {role === "merchant" ? "Timestamp" : "Description"}
+                    </TableHead>
+                    <TableHead className="text-white/60 font-semibold">
+                      Amount
+                    </TableHead>
+                    <TableHead className="text-white/60 font-semibold">
+                      Status
+                    </TableHead>
+                    {role !== "merchant" && (
+                      <TableHead className="text-white/60 font-semibold">
+                        Actions
+                      </TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <OrderRow
+                      key={order.orderId}
+                      order={order}
+                      onConfirm={handleConfirmOrder}
+                      onDispute={handleDispute}
+                      isLoading={actionLoading}
+                      isMerchant={role === "merchant"}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </div>
         )}

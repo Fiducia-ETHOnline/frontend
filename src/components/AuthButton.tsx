@@ -516,15 +516,22 @@ const MintNFTModal: React.FC<MintNFTModalProps> = ({ onClose, onSuccess }) => {
 };
 
 const AuthButton: React.FC = () => {
-  const { address, isConnected, status, chainId } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { disconnect } = useDisconnect();
-  const { token, role, setAuth, clearAuth } = useAuthStore();
+  const {
+    token,
+    role,
+    address: storedAddress,
+    setAuth,
+    clearAuth,
+  } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showMintNFTModal, setShowMintNFTModal] = useState(false);
+  const [showWaitingApproval, setShowWaitingApproval] = useState(false);
   const [pendingRole, setPendingRole] = useState<
     "customer" | "merchant" | null
   >(null);
@@ -628,51 +635,108 @@ const AuthButton: React.FC = () => {
       },
     });
 
-  useEffect(() => {
-    // trigger logout if the status is disconnected
-    if (token && status === "disconnected") {
-      handleLogout();
-    }
-  }, [status, token]);
+  // Removed auto-logout on wallet disconnect - users should stay logged in
+  // even if they disconnect their wallet, so they can reconnect and auto-login
 
   useEffect(() => {
     console.log("balance", a3aBalance, pyusdBalance);
   }, [a3aBalance, pyusdBalance, isBalanceLoading]);
 
+  // Poll for NFT balance when waiting for approval
+  useEffect(() => {
+    if (!showWaitingApproval) return;
+
+    const pollInterval = setInterval(async () => {
+      const result = await refetchMerchantNFT();
+      const nftBalance = result.data;
+      const hasMerchantNFT = nftBalance && Number(nftBalance) > 0;
+
+      if (hasMerchantNFT && address) {
+        setShowWaitingApproval(false);
+        await handleLogin();
+      }
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [showWaitingApproval, address]);
+
   useEffect(() => {
     const checkSession = async () => {
-      const storedToken = localStorage.getItem("fiducia_jwt");
-      const storedRole = localStorage.getItem("fiducia_role") as
-        | "customer"
-        | "merchant"
-        | null;
-      const storedMerchantId = localStorage.getItem("fiducia_merchant_id");
+      // Get the stored auth state from localStorage
+      const storedAuthString = localStorage.getItem("fiducia-auth");
+      let storedAuthState = null;
 
-      // Only restore session if we have a token, an address, and we're not already authenticated
-      if (storedToken && address && !token) {
+      if (storedAuthString) {
         try {
-          setAuth(storedToken, address, storedRole, storedMerchantId);
-          console.log("Session restored for:", address);
-        } catch (err) {
-          console.error("Session validation failed", err);
-          localStorage.removeItem("fiducia_jwt");
-          localStorage.removeItem("fiducia_role");
-          localStorage.removeItem("fiducia_merchant_id");
-          clearAuth();
+          const parsed = JSON.parse(storedAuthString);
+          storedAuthState = parsed.state;
+        } catch (e) {
+          console.error("Failed to parse stored auth state", e);
         }
-      } else if (
+      }
+
+      const storedAddr = storedAuthState?.address;
+      const storedTok = storedAuthState?.token;
+      const storedRol = storedAuthState?.role;
+
+      // Check if connected address matches stored address
+      const isMatchingAddress =
+        storedAddr &&
+        address &&
+        storedAddr.toLowerCase() === address.toLowerCase();
+
+      // If we have stored credentials but address doesn't match, clear session and show role selector
+      if (
+        storedTok &&
+        storedRol &&
+        storedAddr &&
+        address &&
+        !isMatchingAddress
+      ) {
+        console.log(
+          "Address changed from",
+          storedAddr,
+          "to",
+          address,
+          "- clearing session"
+        );
+        clearAuth();
+        setShowRoleSelector(true);
+        return;
+      }
+
+      // If address matches and we have credentials, auto sign-in (don't show role selector)
+      if (isMatchingAddress && storedTok && storedRol && !token) {
+        console.log("Auto-signing in for matching address:", address);
+        // Auth store already has the data from localStorage via persist middleware
+        return;
+      }
+
+      // If no stored credentials or new user, show role selector
+      if (
         isConnected &&
         address &&
-        !storedToken &&
         !token &&
         !showRoleSelector &&
-        !isAdminPage
+        !isAdminPage &&
+        (!storedTok || !storedRol || !isMatchingAddress)
       ) {
+        console.log("Showing role selector for new user or different address");
         setShowRoleSelector(true);
       }
     };
     checkSession();
-  }, [address, token, isConnected, showRoleSelector, setAuth, clearAuth, isAdminPage]);
+  }, [
+    address,
+    token,
+    role,
+    storedAddress,
+    isConnected,
+    showRoleSelector,
+    setAuth,
+    clearAuth,
+    isAdminPage,
+  ]);
 
   const extractNonce = (message: string): string => {
     // Extract nonce from message format: "Sign this message to log in to Fiducia. Domain:a2a.com Nonce: f3139d1717365ae8"
@@ -733,10 +797,6 @@ const AuthButton: React.FC = () => {
       // Step 5: Check if role needs to be set
       if (!user.role) {
         setAuth(token, user.address, null, user.merchant_id || null);
-        localStorage.setItem("fiducia_jwt", token);
-        if (user.merchant_id) {
-          localStorage.setItem("fiducia_merchant_id", user.merchant_id);
-        }
 
         // If we have a pending role (from role selection), complete the setup
         if (pendingRole) {
@@ -747,11 +807,6 @@ const AuthButton: React.FC = () => {
         }
       } else {
         setAuth(token, user.address, user.role, user.merchant_id || null);
-        localStorage.setItem("fiducia_jwt", token);
-        localStorage.setItem("fiducia_role", user.role);
-        if (user.merchant_id) {
-          localStorage.setItem("fiducia_merchant_id", user.merchant_id);
-        }
         setPendingRole(null);
         console.log("Login successful!", user);
 
@@ -771,8 +826,6 @@ const AuthButton: React.FC = () => {
         err.message ||
         "Login failed. Please try again.";
       setError(errorMsg);
-      localStorage.removeItem("fiducia_jwt");
-      localStorage.removeItem("fiducia_role");
       clearAuth();
     } finally {
       setLoading(false);
@@ -812,10 +865,18 @@ const AuthButton: React.FC = () => {
 
   const handleNFTMintSuccess = async () => {
     setShowMintNFTModal(false);
-    await refetchMerchantNFT();
 
-    if (address) {
+    // Refetch NFT balance to check if minting was successful
+    const result = await refetchMerchantNFT();
+    const nftBalance = result.data;
+    const hasMerchantNFT = nftBalance && Number(nftBalance) > 0;
+
+    if (hasMerchantNFT && address) {
+      // NFT confirmed on-chain, proceed with login
       await handleLogin();
+    } else {
+      // NFT not yet confirmed, show waiting for approval screen
+      setShowWaitingApproval(true);
     }
   };
 
@@ -835,12 +896,8 @@ const AuthButton: React.FC = () => {
 
       console.log("Role set response:", response.data);
       const { token: newToken, user } = response.data;
+      // setAuth will automatically update localStorage via Zustand persist
       setAuth(newToken, user.address, user.role, user.merchant_id || null);
-      localStorage.setItem("fiducia_jwt", newToken);
-      localStorage.setItem("fiducia_role", user.role);
-      if (user.merchant_id) {
-        localStorage.setItem("fiducia_merchant_id", user.merchant_id);
-      }
       setPendingRole(null);
       console.log("Role set successfully:", user);
 
@@ -901,13 +958,13 @@ const AuthButton: React.FC = () => {
   };
 
   const handleLogout = () => {
+    // Only clear in-memory state, keep localStorage so user can auto-login on reconnect
     clearAuth();
-    localStorage.removeItem("fiducia_jwt");
-    localStorage.removeItem("fiducia_role");
-    localStorage.removeItem("fiducia_merchant_id");
     setShowRoleSelector(false);
     disconnect();
-    console.log("Logged out and wallet disconnected.");
+    console.log(
+      "Wallet disconnected. Session data preserved for auto-login on reconnect."
+    );
   };
 
   return (
@@ -1076,7 +1133,9 @@ const AuthButton: React.FC = () => {
                       <div className="space-y-1">
                         {a3aBalance && (
                           <div className="flex justify-between text-sm">
-                            <span className="text-white/50">{a3aBalance.symbol}</span>
+                            <span className="text-white/50">
+                              {a3aBalance.symbol}
+                            </span>
                             <span className="text-white">
                               {parseFloat(a3aBalance.formatted).toFixed(2)}
                             </span>
@@ -1084,7 +1143,9 @@ const AuthButton: React.FC = () => {
                         )}
                         {pyusdBalance && (
                           <div className="flex justify-between text-sm">
-                            <span className="text-white/50">{pyusdBalance.symbol}</span>
+                            <span className="text-white/50">
+                              {pyusdBalance.symbol}
+                            </span>
                             <span className="text-white">
                               {parseFloat(pyusdBalance.formatted).toFixed(2)}
                             </span>
@@ -1329,6 +1390,85 @@ const AuthButton: React.FC = () => {
             }}
             onSuccess={handleNFTMintSuccess}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Waiting for Approval Modal */}
+      <AnimatePresence>
+        {showWaitingApproval && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <div className="absolute top-6 right-6 z-[60]">
+              <ConnectKitButton />
+            </div>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 0 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 0 }}
+              className="backdrop-blur-xl backdrop-saturate-[180%] bg-[rgba(17,25,20,0.95)] rounded-3xl border border-green-800/50 p-8 max-w-md w-full shadow-2xl"
+            >
+              <div className="text-center py-8">
+                <motion.div
+                  animate={{
+                    rotate: 360,
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  className="mb-6"
+                >
+                  <Shield className="w-16 h-16 text-emerald-400 mx-auto" />
+                </motion.div>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  Waiting for Approval
+                </h2>
+                <p className="text-white/60 text-sm mb-6">
+                  Your merchant NFT application is being processed. This usually
+                  takes a few moments.
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="flex gap-1">
+                    <motion.div
+                      className="w-2 h-2 bg-green-400 rounded-full"
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        delay: 0,
+                      }}
+                    />
+                    <motion.div
+                      className="w-2 h-2 bg-green-400 rounded-full"
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        delay: 0.3,
+                      }}
+                    />
+                    <motion.div
+                      className="w-2 h-2 bg-green-400 rounded-full"
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        delay: 0.6,
+                      }}
+                    />
+                  </div>
+                </div>
+                <p className="text-white/40 text-xs mt-4">
+                  Checking NFT status...
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
