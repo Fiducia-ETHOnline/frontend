@@ -33,7 +33,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 const API_BASE_URL = "https://fiduciademo.123a.club/api";
 const MERCHANT_NFT_ADDRESS =
-  "0xe2d8c380db7d124D03DACcA07645Fea659De9738" as const;
+  "0x1e08cFBd659436F8Fc72C91A9302B6C6F444c0A2" as const;
 
 type ContractAddresses = {
   a3a: `0x${string}` | undefined;
@@ -396,14 +396,14 @@ const MintNFTModal: React.FC<MintNFTModalProps> = ({ onClose, onSuccess }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100000] p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="absolute top-6 right-6 z-[60]">
+      <div className="absolute top-6 right-6 z-[100001]">
         <ConnectKitButton />
       </div>
       <motion.div
