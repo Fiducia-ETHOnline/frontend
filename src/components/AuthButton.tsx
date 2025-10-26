@@ -867,6 +867,7 @@ const AuthButton: React.FC = () => {
 
   const handleNFTMintSuccess = async () => {
     setShowMintNFTModal(false);
+    setShowRoleSelector(false); // Ensure role selector stays closed
 
     // Refetch NFT balance to check if minting was successful
     const result = await refetchMerchantNFT();
@@ -1416,9 +1417,9 @@ const AuthButton: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100000] p-4"
           >
-            <div className="absolute top-6 right-6 z-[60]">
+            <div className="absolute top-6 right-6 z-[100001]">
               <ConnectKitButton />
             </div>
             <motion.div
